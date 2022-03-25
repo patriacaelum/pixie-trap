@@ -19,13 +19,14 @@ class Canvas(wx.Panel):
         self.bmp_loaded = False
 
         self.n_hitboxes_created = 0
+        self.hitbox_colour = wx.Colour(255, 50, 0, 50)
         self.hitboxes = dict()
 
         self.tool_draw_left_down_x = 0
         self.tool_draw_left_down_y = 0
 
         self.bmp = wx.Bitmap()
-
+        
         self.Bind(wx.EVT_LEFT_DOWN, self.onToolDrawLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.onToolDrawLeftUp)
 
@@ -37,37 +38,12 @@ class Canvas(wx.Panel):
 
         self.bmp_loaded = True
 
-    def onPaintCanvas(self, event):
-        """Paints the background image and the hitboxes on the canvas."""
-        dc = wx.PaintDC(self)
-        gc = wx.GraphicsContext.Create(dc)
-
-        if self.bmp_loaded:
-            gc.DrawBitmap(
-                bmp=self.bmp,
-                x=0,
-                y=0,
-                w=self.bmp.GetWidth(),
-                h=self.bmp.GetHeight(),
-            )
-
-        for hitbox in self.hitboxes.values():
-            bmp = wx.Bitmap.FromRGBA(
-                width=hitbox["w"],
-                height=hitbox["h"],
-                red=256,
-                green=50,
-                blue=0,
-                alpha=50,
-            )
-
-            gc.DrawBitmap(
-                bmp=bmp,
-                x=hitbox["x"],
-                y=hitbox["y"],
-                w=hitbox["w"],
-                h=hitbox["h"],
-            )
+    def Save(self, path):
+        try:
+            with open(path, "w") as file:
+                pass
+        except IOError:
+            wx.LogError(f"Failed to save file in {path}")
 
     def onToolDrawLeftDown(self, event):
         """Records the location of the mouse click."""
@@ -95,6 +71,39 @@ class Canvas(wx.Panel):
         """Selects the shape for resizing."""
         pass
 
+    def onPaintCanvas(self, event):
+        """Paints the background image and the hitboxes on the canvas."""
+        dc = wx.PaintDC(self)
+        gc = wx.GraphicsContext.Create(dc)
+
+        if self.bmp_loaded:
+            gc.DrawBitmap(
+                bmp=self.bmp,
+                x=0,
+                y=0,
+                w=self.bmp.GetWidth(),
+                h=self.bmp.GetHeight(),
+            )
+
+        print(self.hitboxes.values())
+        for hitbox in self.hitboxes.values():
+            bmp = wx.Bitmap.FromRGBA(
+                width=hitbox["w"],
+                height=hitbox["h"],
+                red=self.hitbox_colour.red,
+                green=self.hitbox_colour.green,
+                blue=self.hitbox_colour.blue,
+                alpha=50,
+            )
+
+            gc.DrawBitmap(
+                bmp=bmp,
+                x=hitbox["x"],
+                y=hitbox["y"],
+                w=hitbox["w"],
+                h=hitbox["h"],
+            )
+
 
 class MainFrame(wx.Frame):
     def __init__(self, parent):
@@ -104,7 +113,7 @@ class MainFrame(wx.Frame):
             title="sprite-hitbox-generator",
             pos=wx.DefaultPosition,
             size=wx.Size(640, 480),
-            style=wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL,
+            style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
         )
 
         # Internal variables
@@ -113,7 +122,7 @@ class MainFrame(wx.Frame):
         # Main panel
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
 
-        sizer = wx.BoxSizer(orient=wx.VERTICAL)
+        sizer = wx.BoxSizer(orient=wx.HORIZONTAL)
 
         self.canvas = Canvas(parent=self)
         sizer.Add(
@@ -186,17 +195,15 @@ class MainFrame(wx.Frame):
 
         self.SetMenuBar(self.main_menu_bar)
 
-        # Main tool bar
         self.main_tool_bar = self.CreateToolBar(
             wx.TB_VERTICAL,
             wx.ID_ANY,
         )
 
-        self.tool_move_bmp = wx.Bitmap(name="assets/tool_move.png")
         self.tool_move = self.main_tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Move",
-            bitmap=self.tool_move_bmp,
+            bitmap=wx.Bitmap(name="assets/tool_move.png"),
             bmpDisabled=wx.NullBitmap,
             kind=wx.ITEM_NORMAL,
             shortHelp=wx.EmptyString,
@@ -206,11 +213,23 @@ class MainFrame(wx.Frame):
 
         self.main_tool_bar.AddSeparator()
 
-        self.tool_draw_bmp = wx.Bitmap(name="assets/tool_draw.png")
         self.tool_draw = self.main_tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Draw",
-            bitmap=self.tool_draw_bmp,
+            bitmap=wx.Bitmap(name="assets/tool_draw.png"),
+            bmpDisabled=wx.NullBitmap,
+            kind=wx.ITEM_NORMAL,
+            shortHelp=wx.EmptyString,
+            longHelp=wx.EmptyString,
+            clientData=None,
+        )
+
+        self.main_tool_bar.AddSeparator()
+
+        self.tool_colour_picker = self.main_tool_bar.AddTool(
+            toolId=wx.ID_ANY,
+            label="Colour Picker",
+            bitmap=wx.Bitmap(name="assets/tool_colour_picker.png"),
             bmpDisabled=wx.NullBitmap,
             kind=wx.ITEM_NORMAL,
             shortHelp=wx.EmptyString,
@@ -224,6 +243,8 @@ class MainFrame(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
+
+        self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
 
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
@@ -263,14 +284,23 @@ class MainFrame(wx.Frame):
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
-            self.write(dialog.GetPath())
+            self.canvas.Save(dialog.GetPath())
 
-    def write(self, path):
-        try:
-            with open(path, "w") as file:
-                pass
-        except IOError:
-            wx.LogError(f"Failed to save file in {path}")
+    def onToolColourPicker(self, event):
+        """Opens the colour dialog and sets the draw colour."""
+        with wx.ColourDialog(parent=self) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            colour = dialog.GetColourData().GetColour()
+
+            self.canvas.hitbox_colour.Set(
+                red=colour.red,
+                green=colour.green,
+                blue=colour.blue,
+            )
+
+        self.Refresh()
 
     def __del__(self):
         pass
