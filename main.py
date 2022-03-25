@@ -6,22 +6,90 @@ IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
 JSON_WILDCARD = "JSON files (*.json)|*.json"
 
 
+class Canvas(wx.Panel):
+    def __init__(self, parent):
+        super().__init__(
+            parent=parent,
+            id=wx.ID_ANY,
+            pos=wx.DefaultPosition,
+            size=wx.DefaultSize,
+            style=wx.HSCROLL | wx.VSCROLL,
+        )
+
+        self.n_hitboxes_created = 0
+        self.hitboxes = dict()
+
+        self.tool_draw_left_down_x = 0
+        self.tool_draw_left_down_y = 0
+
+        self.Bind(wx.EVT_LEFT_DOWN, self.onToolDrawLeftDown)
+        self.Bind(wx.EVT_LEFT_UP, self.onToolDrawLeftUp)
+
+        self.Bind(wx.EVT_PAINT, self.onDrawRectangle)
+
+    def onDrawRectangle(self, event):
+        """Draws a rectangle on the canvas."""
+        dc = wx.PaintDC(self)
+        gc = wx.GraphicsContext.Create(dc)
+
+        for hitbox in self.hitboxes.values():
+            bmp = wx.Bitmap.FromRGBA(
+                width=hitbox["w"],
+                height=hitbox["h"],
+                red=256,
+                green=50,
+                blue=0,
+                alpha=50,
+            )
+
+            gc.DrawBitmap(
+                bmp=bmp,
+                x=hitbox["x"],
+                y=hitbox["y"],
+                w=hitbox["w"],
+                h=hitbox["h"],
+            )
+
+    def onToolDrawLeftDown(self, event):
+        """Records the location of the mouse click."""
+        self.tool_draw_left_down_x, self.tool_draw_left_down_y = event.GetPosition()
+
+    def onToolDrawLeftUp(self, event):
+        """Records the size of the drawn rectangle and renders it."""
+        x, y = event.GetPosition()
+
+        w = abs(x - self.tool_draw_left_down_x)
+        h = abs(y - self.tool_draw_left_down_y)
+
+        self.hitboxes[self.n_hitboxes_created] = {
+            "x": min(x, self.tool_draw_left_down_x),
+            "y": min(y, self.tool_draw_left_down_y),
+            "w": w,
+            "h": h,
+        }
+
+        self.n_hitboxes_created += 1
+
+        self.Refresh()
+
+    def onToolDrawDoubleClick(self, event):
+        """Selects the shape for resizing."""
+        pass
+
+
 class MainFrame(wx.Frame):
     def __init__(self, parent):
-        wx.Frame.__init__(
-            self, 
-            parent,
+        super().__init__(
+            parent=parent,
             id=wx.ID_ANY,
             title="sprite-hitbox-generator",
             pos=wx.DefaultPosition,
-            size=wx.Size(500, 300),
+            size=wx.Size(640, 480),
             style=wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL,
         )
 
         # Internal variables
         self.saved = True
-        self.n_hitboxes_created = 0
-        self.hitboxes = dict()
 
         # Main panel
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
@@ -43,18 +111,11 @@ class MainFrame(wx.Frame):
         #     border=5,
         # )
 
-        self.canvas = wx.Panel(
-            parent=self,
-            id=wx.ID_ANY,
-            pos=wx.DefaultPosition,
-            size=wx.DefaultSize,
-            style=0,
-        )
-        self.Bind(wx.EVT_PAINT, self.onDrawRectangle)
+        self.canvas = Canvas(parent=self)
         sizer.Add(
             window=self.canvas,
-            proportion=0,
-            flag=wx.ALL,
+            proportion=1,
+            flag=wx.ALL | wx.EXPAND,
             border=5,
         )
 
@@ -82,11 +143,6 @@ class MainFrame(wx.Frame):
             helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
         )
-        self.Bind(
-            event=wx.EVT_MENU,
-            handler=self.onFileMenuOpen,
-            id=self.file_menu_open.GetId()
-        )
         self.file_menu.Append(self.file_menu_open)
 
         self.file_menu.AppendSeparator()
@@ -108,11 +164,6 @@ class MainFrame(wx.Frame):
             text="Save\tCTRL+S",
             helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
-        )
-        self.Bind(
-            event=wx.EVT_MENU, 
-            handler=self.onFileMenuSave,
-            id=self.file_menu_save.GetId()
         )
         self.file_menu.Append(self.file_menu_save)
 
@@ -151,13 +202,7 @@ class MainFrame(wx.Frame):
 
         self.main_tool_bar.AddSeparator()
 
-        self.tool_draw_x = 0
-        self.tool_draw_y = 0
-        self.tool_draw_w = 0
-        self.tool_draw_h = 0
         self.tool_draw_bmp = wx.Bitmap(name="assets/tool_draw.png")
-        self.Bind(wx.EVT_LEFT_DOWN, self.onToolDrawLeftDown)
-        self.Bind(wx.EVT_LEFT_UP, self.onToolDrawLeftUp)
         self.tool_draw = self.main_tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Draw",
@@ -173,28 +218,11 @@ class MainFrame(wx.Frame):
 
         self.Centre(wx.BOTH)
 
-    def onDrawRectangle(self, event):
-        """Draws a rectangle on the canvas."""
-        dc = wx.PaintDC(self)
-        gc = wx.GraphicsContext.Create(dc)
+        self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
 
-        for hitbox in self.hitboxes.values():
-            bmp = wx.Bitmap.FromRGBA(
-                width=hitbox["w"],
-                height=hitbox["h"],
-                red=256,
-                green=50,
-                blue=0,
-                alpha=50,
-            )
-
-            gc.DrawBitmap(
-                bmp=bmp,
-                x=hitbox["x"],
-                y=hitbox["y"],
-                w=hitbox["w"],
-                h=hitbox["h"],
-            )
+        print("Window:", self.GetSize())
+        print("Canvas:", self.canvas.GetSize())
 
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
@@ -234,32 +262,6 @@ class MainFrame(wx.Frame):
 
             self.write(dialog.GetPath())
 
-    def onToolDrawLeftDown(self, event):
-        """Records the location of the mouse click."""
-        self.tool_draw_x, self.tool_draw_y = event.GetPosition()
-
-    def onToolDrawLeftUp(self, event):
-        """Records the size of the drawn rectangle and renders it."""
-        x, y = event.GetPosition()
-
-        self.tool_draw_w = x - self.tool_draw_x
-        self.tool_draw_h = y - self.tool_draw_h
-
-        self.hitboxes[self.n_hitboxes_created] = {
-            "x": self.tool_draw_x,
-            "y": self.tool_draw_y,
-            "w": self.tool_draw_w,
-            "h": self.tool_draw_h,
-        }
-
-        self.n_hitboxes_created += 1
-
-        self.Refresh()
-
-    def onToolDrawDoubleClick(self, event):
-        """Selects the shape for resizing."""
-        pass
-
     def read(self, path):
         """Reads and loads an image file to the main panel."""
         bmp = wx.Bitmap(name=path)
@@ -272,7 +274,6 @@ class MainFrame(wx.Frame):
                 pass
         except IOError:
             wx.LogError(f"Failed to save file in {path}")
-
 
     def __del__(self):
         pass
