@@ -20,9 +20,6 @@ class SpriteHitboxGenerator(wx.Frame):
             style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
         )
 
-        # Internal variables
-        self.saved = True
-
         # Main panel
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
 
@@ -147,6 +144,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
 
         self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
@@ -154,9 +152,29 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 
+    def Save(self):
+        """Create and show the `wx.FileDialog` to save the current canvas."""
+        with wx.FileDialog(
+                    parent=self,
+                    message="Save hitbox data",
+                    wildcard=JSON_WILDCARD,
+                    style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+                ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            self.canvas.Save(dialog.GetPath())
+
+        self.canvas.saved = True
+
+    def onFileMenuExit(self, event):
+        """Asks to save the current canvas and exits the program."""
+        self.Save()
+        self.Close()
+
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
-        if not self.saved:
+        if not self.canvas.saved:
             confirm_continue = wx.MessageBox(
                 "Current file has not been saved. Continue?",
                 wx.ICON_QUESTION | wx.YES_NO,
@@ -182,17 +200,8 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Refresh()
 
     def onFileMenuSave(self, event):
-        """Create and show the `wx.FileDialog` to save a file."""
-        with wx.FileDialog(
-                    parent=self,
-                    message="Save hitbox data",
-                    wildcard=JSON_WILDCARD,
-                    style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
-                ) as dialog:
-            if dialog.ShowModal() == wx.ID_CANCEL:
-                return
-
-            self.canvas.Save(dialog.GetPath())
+        """Create and show the `wx.FileDialog` to save the current canvas."""
+        self.Save()
 
     def onToolColourPicker(self, event):
         """Opens the colour dialog and sets the draw colour."""
@@ -211,6 +220,7 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Refresh()
 
     def onToolDraw(self, event):
+        """Toggles the draw tool on."""
         self.canvas.state = State.DRAW
         self.canvas.hitbox_select = None
 
@@ -220,12 +230,10 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Refresh()
 
     def onToolMove(self, event):
+        """Toggles the move tool on."""
         self.canvas.state = State.MOVE
 
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 
         self.Refresh()
-
-    def __del__(self):
-        pass
