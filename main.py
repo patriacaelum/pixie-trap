@@ -1,9 +1,15 @@
-import wx
+import enum
 import os
+import wx
 
 
 IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
 JSON_WILDCARD = "JSON files (*.json)|*.json"
+
+
+class State(enum.Enum):
+    MOVE = enum.auto()
+    DRAW = enum.auto()
 
 
 class Canvas(wx.Panel):
@@ -17,18 +23,21 @@ class Canvas(wx.Panel):
         )
 
         self.bmp_loaded = False
+        self.state = State.MOVE
 
+        self.hitboxes = dict()
         self.n_hitboxes_created = 0
         self.hitbox_colour = wx.Colour(255, 50, 0, 50)
-        self.hitboxes = dict()
+        self.hitbox_select = None
 
-        self.tool_draw_left_down_x = 0
-        self.tool_draw_left_down_y = 0
+        self.left_down_x = 0
+        self.left_down_y = 0
 
         self.bmp = wx.Bitmap()
         
-        self.Bind(wx.EVT_LEFT_DOWN, self.onToolDrawLeftDown)
-        self.Bind(wx.EVT_LEFT_UP, self.onToolDrawLeftUp)
+        self.Bind(wx.EVT_LEFT_DOWN, self.onLeftDown)
+        self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
+        self.Bind(wx.EVT_MOTION, self.onMotion)
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
@@ -45,27 +54,70 @@ class Canvas(wx.Panel):
         except IOError:
             wx.LogError(f"Failed to save file in {path}")
 
-    def onToolDrawLeftDown(self, event):
+    def onLeftDown(self, event):
         """Records the location of the mouse click."""
-        self.tool_draw_left_down_x, self.tool_draw_left_down_y = event.GetPosition()
+        self.left_down_x, self.left_down_y = event.GetPosition()
 
-    def onToolDrawLeftUp(self, event):
+        if self.state == State.MOVE:
+            # Find a rectangle in the mouse position
+            for label, hitbox in self.hitboxes.items():
+                x_range = hitbox["x"] <= self.left_down_x <= hitbox["x"] + hitbox["w"]
+                y_range = hitbox["y"] <= self.left_down_y <= hitbox["y"] + hitbox["h"]
+
+                if x_range and y_range:
+                    self.hitbox_select = label
+                    self.Refresh()
+
+                    break
+
+        elif self.state == State.DRAW:
+            self.hitbox_select = self.n_hitboxes_created
+            self.hitboxes[self.hitbox_select] = {
+                "x": self.left_down_x,
+                "y": self.left_down_y,
+                "w": 0,
+                "h": 0,
+            }
+
+            self.n_hitboxes_created += 1
+
+    def onLeftUp(self, event):
         """Records the size of the drawn rectangle and renders it."""
+        if self.state == State.MOVE:
+            pass
+
+        elif self.state == State.DRAW and self.hitbox_select is not None:
+            hitbox = self.hitboxes[self.hitbox_select]
+
+            if hitbox["w"] <= 0 or hitbox["h"] <= 0:
+                del self.hitboxes[self.hitbox_select]
+
+            self.hitbox_select = None
+
+    def onMotion(self, event):
+        if not event.LeftIsDown():
+            return
+
         x, y = event.GetPosition()
 
-        w = abs(x - self.tool_draw_left_down_x)
-        h = abs(y - self.tool_draw_left_down_y)
+        if self.state == State.MOVE:
+            self.hitboxes[self.hitbox_select]["x"] += x - self.left_down_x
+            self.hitboxes[self.hitbox_select]["y"] += y - self.left_down_y
 
-        self.hitboxes[self.n_hitboxes_created] = {
-            "x": min(x, self.tool_draw_left_down_x),
-            "y": min(y, self.tool_draw_left_down_y),
-            "w": w,
-            "h": h,
-        }
+            self.left_down_x = x
+            self.left_down_y = y
 
-        self.n_hitboxes_created += 1
+            self.Refresh()
 
-        self.Refresh()
+        elif self.state == State.DRAW:
+            self.hitboxes[self.hitbox_select] = {
+                "x": min(x, self.left_down_x),
+                "y": min(y, self.left_down_y),
+                "w": abs(x - self.left_down_x),
+                "h": abs(y - self.left_down_y),
+            }
+
+            self.Refresh()
 
     def onToolDrawDoubleClick(self, event):
         """Selects the shape for resizing."""
@@ -85,8 +137,10 @@ class Canvas(wx.Panel):
                 h=self.bmp.GetHeight(),
             )
 
-        print(self.hitboxes.values())
         for hitbox in self.hitboxes.values():
+            if hitbox["w"] <= 0 or hitbox["h"] <= 0:
+                continue
+
             bmp = wx.Bitmap.FromRGBA(
                 width=hitbox["w"],
                 height=hitbox["h"],
@@ -102,6 +156,17 @@ class Canvas(wx.Panel):
                 y=hitbox["y"],
                 w=hitbox["w"],
                 h=hitbox["h"],
+            )
+
+        if self.state == State.MOVE and self.hitbox_select is not None:
+            gc.SetPen(wx.BLACK_PEN)
+            hitbox = self.hitboxes[self.hitbox_select]
+
+            gc.DrawEllipse(
+                x=int(hitbox["x"] + 0.4 * hitbox["w"]),
+                y=int(hitbox["y"] + 0.4 * hitbox["h"]),
+                w=int(0.2 * hitbox["w"]),
+                h=int(0.2 * hitbox["h"]),
             )
 
 
@@ -195,38 +260,38 @@ class MainFrame(wx.Frame):
 
         self.SetMenuBar(self.main_menu_bar)
 
-        self.main_tool_bar = self.CreateToolBar(
+        self.tool_bar = self.CreateToolBar(
             wx.TB_VERTICAL,
             wx.ID_ANY,
         )
 
-        self.tool_move = self.main_tool_bar.AddTool(
+        self.tool_move = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Move",
             bitmap=wx.Bitmap(name="assets/tool_move.png"),
             bmpDisabled=wx.NullBitmap,
-            kind=wx.ITEM_NORMAL,
+            kind=wx.ITEM_CHECK,
             shortHelp=wx.EmptyString,
             longHelp=wx.EmptyString,
             clientData=None,
         )
 
-        self.main_tool_bar.AddSeparator()
+        self.tool_bar.AddSeparator()
 
-        self.tool_draw = self.main_tool_bar.AddTool(
+        self.tool_draw = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Draw",
             bitmap=wx.Bitmap(name="assets/tool_draw.png"),
             bmpDisabled=wx.NullBitmap,
-            kind=wx.ITEM_NORMAL,
+            kind=wx.ITEM_CHECK,
             shortHelp=wx.EmptyString,
             longHelp=wx.EmptyString,
             clientData=None,
         )
 
-        self.main_tool_bar.AddSeparator()
+        self.tool_bar.AddSeparator()
 
-        self.tool_colour_picker = self.main_tool_bar.AddTool(
+        self.tool_colour_picker = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Colour Picker",
             bitmap=wx.Bitmap(name="assets/tool_colour_picker.png"),
@@ -237,14 +302,18 @@ class MainFrame(wx.Frame):
             clientData=None,
         )
 
-        self.main_tool_bar.Realize()
+        self.tool_bar.Realize()
 
         self.Centre(wx.BOTH)
 
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
 
+        self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
+        self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
+
+        self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
@@ -299,6 +368,23 @@ class MainFrame(wx.Frame):
                 green=colour.green,
                 blue=colour.blue,
             )
+
+        self.Refresh()
+
+    def onToolDraw(self, event):
+        self.canvas.state = State.DRAW
+        self.canvas.hitbox_select = None
+
+        self.tool_bar.ToggleTool(self.tool_draw.GetId(), True)
+        self.tool_bar.ToggleTool(self.tool_move.GetId(), False)
+
+        self.Refresh()
+
+    def onToolMove(self, event):
+        self.canvas.state = State.MOVE
+
+        self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
+        self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 
         self.Refresh()
 
