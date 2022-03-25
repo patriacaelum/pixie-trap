@@ -16,21 +16,40 @@ class Canvas(wx.Panel):
             style=wx.HSCROLL | wx.VSCROLL,
         )
 
+        self.bmp_loaded = False
+
         self.n_hitboxes_created = 0
         self.hitboxes = dict()
 
         self.tool_draw_left_down_x = 0
         self.tool_draw_left_down_y = 0
 
+        self.bmp = wx.Bitmap()
+
         self.Bind(wx.EVT_LEFT_DOWN, self.onToolDrawLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.onToolDrawLeftUp)
 
-        self.Bind(wx.EVT_PAINT, self.onDrawRectangle)
+        self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
-    def onDrawRectangle(self, event):
-        """Draws a rectangle on the canvas."""
+    def LoadImage(self, path):
+        """Reads and loads an image file to the canvas."""
+        self.bmp.LoadFile(name=path)
+
+        self.bmp_loaded = True
+
+    def onPaintCanvas(self, event):
+        """Paints the background image and the hitboxes on the canvas."""
         dc = wx.PaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
+
+        if self.bmp_loaded:
+            gc.DrawBitmap(
+                bmp=self.bmp,
+                x=0,
+                y=0,
+                w=self.bmp.GetWidth(),
+                h=self.bmp.GetHeight(),
+            )
 
         for hitbox in self.hitboxes.values():
             bmp = wx.Bitmap.FromRGBA(
@@ -95,21 +114,6 @@ class MainFrame(wx.Frame):
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
 
         sizer = wx.BoxSizer(orient=wx.VERTICAL)
-
-        # self.main_bmp = wx.StaticBitmap(
-        #     parent=self,
-        #     id=wx.ID_ANY,
-        #     bitmap=wx.NullBitmap,
-        #     pos=wx.DefaultPosition,
-        #     size=wx.DefaultSize,
-        #     style=0,
-        # )
-        # sizer.Add(
-        #     window=self.main_bmp, 
-        #     proportion=0, 
-        #     flag=wx.ALL, 
-        #     border=5,
-        # )
 
         self.canvas = Canvas(parent=self)
         sizer.Add(
@@ -221,9 +225,6 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
 
-        print("Window:", self.GetSize())
-        print("Canvas:", self.canvas.GetSize())
-
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
         if not self.saved:
@@ -247,7 +248,9 @@ class MainFrame(wx.Frame):
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
-            self.read(dialog.GetPath())
+            self.canvas.LoadImage(dialog.GetPath())
+
+        self.Refresh()
 
     def onFileMenuSave(self, event):
         """Create and show the `wx.FileDialog` to save a file."""
@@ -261,12 +264,6 @@ class MainFrame(wx.Frame):
                 return
 
             self.write(dialog.GetPath())
-
-    def read(self, path):
-        """Reads and loads an image file to the main panel."""
-        bmp = wx.Bitmap(name=path)
-        self.main_bmp.SetBitmap(label=bmp)
-
 
     def write(self, path):
         try:
