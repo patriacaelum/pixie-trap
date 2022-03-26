@@ -1,7 +1,7 @@
 import wx
 
-from primitives import Point, Rect
-from state import State
+from enums import State
+from primitives import Point, Rect, ScaleRects
 
 
 class Canvas(wx.Panel):
@@ -22,6 +22,10 @@ class Canvas(wx.Panel):
         self.n_hitboxes_created = 0
         self.hitbox_colour = wx.Colour(255, 50, 0, 50)
         self.hitbox_select = None
+
+        self.scale_select = None
+        self.scale_radius = 5
+        self.scale_rects = ScaleRects()
 
         self.left_down = Point()
 
@@ -51,14 +55,16 @@ class Canvas(wx.Panel):
         self.left_down.Set(*event.GetPosition())
 
         if self.state == State.MOVE:
-            # Find a rectangle in the mouse position
-            for label, hitbox in self.hitboxes.items():
-                if hitbox.Contains(self.left_down):
-                    self.hitbox_select = label
+            if self.hitbox_select is not None:
+                self.scale_select = self.scale_rects.SelectScale(self.left_down)
 
-                    break
+            if self.scale_select is None:
+                # Find a hitbox in the mouse position
+                for label, hitbox in self.hitboxes.items():
+                    if hitbox.Contains(self.left_down):
+                        self.hitbox_select = label
 
-            # if hitbox selected and clicked on corner, extend
+                        break
 
             self.Refresh()
 
@@ -92,9 +98,20 @@ class Canvas(wx.Panel):
 
         x, y = event.GetPosition()
 
+        dx = x - self.left_down.x
+        dy = y - self.left_down.y
+
         if self.state == State.MOVE:
-            self.hitboxes[self.hitbox_select].x += x - self.left_down.x
-            self.hitboxes[self.hitbox_select].y += y - self.left_down.y
+            if self.scale_select is not None:
+                self.hitboxes[self.hitbox_select].Scale(
+                    scale=self.scale_select,
+                    dx=dx,
+                    dy=dy,
+                )
+
+            else:
+                self.hitboxes[self.hitbox_select].x += dx
+                self.hitboxes[self.hitbox_select].y += dy
 
             self.left_down.Set(x=x, y=y)
 
@@ -156,13 +173,24 @@ class Canvas(wx.Panel):
             )
             hitbox = self.hitboxes[self.hitbox_select]
 
-            r = 0.1 * min(hitbox.w, hitbox.h)
-
             gc.DrawEllipse(
-                x=int(hitbox.x + 0.5 * hitbox.w - r),
-                y=int(hitbox.y + 0.5 * hitbox.h - r),
-                w=int(2 * r),
-                h=int(2 * r),
+                x=int(hitbox.centre.x - self.scale_radius),
+                y=int(hitbox.centre.y - self.scale_radius),
+                w=int(2 * self.scale_radius),
+                h=int(2 * self.scale_radius),
             )
+
+            self.scale_rects.Set(
+                rect=hitbox,
+                radius=self.scale_radius,
+            )
+
+            for rectangle in self.scale_rects.rects.values():
+                gc.DrawRectangle(
+                    x=rectangle.x,
+                    y=rectangle.y,
+                    w=rectangle.w,
+                    h=rectangle.h,
+                )
 
         self.saved = False

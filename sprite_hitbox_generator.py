@@ -1,8 +1,8 @@
 import os
 import wx
 
+from enums import State
 from canvas import Canvas
-from state import State
 
 
 IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
@@ -142,6 +142,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Centre(wx.BOTH)
 
+        self.Bind(wx.EVT_MENU, self.onFileMenuNew, id=self.file_menu_new.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
@@ -151,6 +152,23 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
 
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
+
+    def Open(self):
+        """Create and show the `wx.FileDialog` to open an image."""
+        with wx.FileDialog(
+                    parent=self,
+                    message="Select a file to open",
+                    defaultDir=os.getcwd(),
+                    defaultFile="",
+                    wildcard=IMAGE_WILDCARD,
+                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            self.canvas.LoadImage(dialog.GetPath())
+
+        self.Refresh()
 
     def Save(self):
         """Create and show the `wx.FileDialog` to save the current canvas."""
@@ -172,32 +190,23 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Save()
         self.Close()
 
+    def onFileMenuNew(self, event):
+        self.Open()
+
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
         if not self.canvas.saved:
             confirm_continue = wx.MessageBox(
-                "Current file has not been saved. Continue?",
-                wx.ICON_QUESTION | wx.YES_NO,
-                self
+                message="Current file has not been saved. Continue?",
+                caption="Current canvas not saved",
+                style=wx.ICON_QUESTION | wx.YES_NO,
+                parent=self
             )
 
             if confirm_continue == wx.NO:
                 return
 
-        with wx.FileDialog(
-                    parent=self,
-                    message="Select a file to open",
-                    defaultDir=os.getcwd(),
-                    defaultFile="",
-                    wildcard=IMAGE_WILDCARD,
-                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                ) as dialog:
-            if dialog.ShowModal() == wx.ID_CANCEL:
-                return
-
-            self.canvas.LoadImage(dialog.GetPath())
-
-        self.Refresh()
+        self.Open()
 
     def onFileMenuSave(self, event):
         """Create and show the `wx.FileDialog` to save the current canvas."""
