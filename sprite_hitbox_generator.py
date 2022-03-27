@@ -9,9 +9,10 @@ from inspector import Inspector
 class SpriteHitboxGenerator(wx.Frame):
     def __init__(self, parent=None):
         super().__init__(
-            parent=parent, 
-            title="sprite-hitbox-generator", 
-            size=(640, 480)
+            parent=parent,
+            title="sprite-hitbox-generator",
+            size=wx.Size(640, 480),
+            style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
         )
 
         self.Maximize()
@@ -59,6 +60,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_new = wx.MenuItem(
             parentMenu=self.file_menu,
+            id=wx.ID_ANY,
             text="New\tCTRL+N",
             kind=wx.ITEM_NORMAL,
         )
@@ -68,6 +70,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_open = wx.MenuItem(
             parentMenu=self.file_menu,
+            id=wx.ID_ANY,
             text="Open\tCTRL+O",
             kind=wx.ITEM_NORMAL,
         )
@@ -77,6 +80,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_close = wx.MenuItem(
             parentMenu=self.file_menu,
+            id=wx.ID_ANY,
             text="Close\tCTRL+W",
             kind=wx.ITEM_NORMAL,
         )
@@ -86,6 +90,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_save = wx.MenuItem(
             parentMenu=self.file_menu,
+            id=wx.ID_ANY,
             text="Save\tCTRL+S",
             kind=wx.ITEM_NORMAL,
         )
@@ -95,6 +100,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_exit = wx.MenuItem(
             parentMenu=self.file_menu,
+            id=wx.ID_ANY,
             text="Exit\tCTRL+Q",
             kind=wx.ITEM_NORMAL,
         )
