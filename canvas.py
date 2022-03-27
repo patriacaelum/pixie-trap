@@ -1,18 +1,12 @@
 import wx
 
-from enums import State
+from constants import State
 from primitives import Point, Rect, ScaleRects
 
 
 class Canvas(wx.Panel):
     def __init__(self, parent):
-        super().__init__(
-            parent=parent,
-            id=wx.ID_ANY,
-            pos=wx.DefaultPosition,
-            size=wx.DefaultSize,
-            style=wx.HSCROLL | wx.VSCROLL,
-        )
+        super().__init__(parent=parent)
 
         self.bmp_loaded = False
         self.state = State.MOVE

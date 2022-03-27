@@ -1,4 +1,4 @@
-from enums import Scale
+from constants import Scale
 
 
 class Point:

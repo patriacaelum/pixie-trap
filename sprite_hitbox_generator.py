@@ -2,24 +2,19 @@ import os
 import wx
 
 from canvas import Canvas
-from enums import State
+from constants import State, EXPAND, IMAGE_WILDCARD, JSON_WILDCARD
 from inspector import Inspector
-
-
-IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
-JSON_WILDCARD = "JSON files (*.json)|*.json"
 
 
 class SpriteHitboxGenerator(wx.Frame):
     def __init__(self, parent=None):
         super().__init__(
-            parent=parent,
-            id=wx.ID_ANY,
-            title="sprite-hitbox-generator",
-            pos=wx.DefaultPosition,
-            size=wx.Size(640, 480),
-            style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
+            parent=parent, 
+            title="sprite-hitbox-generator", 
+            size=(640, 480)
         )
+
+        self.Maximize()
 
         # Main panel
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
@@ -30,7 +25,7 @@ class SpriteHitboxGenerator(wx.Frame):
         main_sizer.Add(
             window=self.canvas,
             proportion=1,
-            flag=wx.ALL | wx.EXPAND,
+            flag=EXPAND,
             border=5,
         )
 
@@ -38,7 +33,7 @@ class SpriteHitboxGenerator(wx.Frame):
         main_sizer.Add(
             window=self.inspector,
             proportion=1,
-            flag=wx.ALL | wx.EXPAND,
+            flag=EXPAND,
             border=5,
         )
 
@@ -64,9 +59,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_new = wx.MenuItem(
             parentMenu=self.file_menu,
-            id=wx.ID_ANY,
             text="New\tCTRL+N",
-            helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_new)
@@ -75,9 +68,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_open = wx.MenuItem(
             parentMenu=self.file_menu,
-            id=wx.ID_ANY,
             text="Open\tCTRL+O",
-            helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_open)
@@ -86,9 +77,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_close = wx.MenuItem(
             parentMenu=self.file_menu,
-            id=wx.ID_ANY,
             text="Close\tCTRL+W",
-            helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_close)
@@ -97,9 +86,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_save = wx.MenuItem(
             parentMenu=self.file_menu,
-            id=wx.ID_ANY,
             text="Save\tCTRL+S",
-            helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_save)
@@ -108,9 +95,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.file_menu_exit = wx.MenuItem(
             parentMenu=self.file_menu,
-            id=wx.ID_ANY,
             text="Exit\tCTRL+Q",
-            helpString=wx.EmptyString,
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_exit)
@@ -133,11 +118,7 @@ class SpriteHitboxGenerator(wx.Frame):
             toolId=wx.ID_ANY,
             label="Move",
             bitmap=wx.Bitmap(name="assets/tool_move.png"),
-            bmpDisabled=wx.NullBitmap,
             kind=wx.ITEM_CHECK,
-            shortHelp=wx.EmptyString,
-            longHelp=wx.EmptyString,
-            clientData=None,
         )
 
         self.tool_bar.AddSeparator()
@@ -146,11 +127,7 @@ class SpriteHitboxGenerator(wx.Frame):
             toolId=wx.ID_ANY,
             label="Draw",
             bitmap=wx.Bitmap(name="assets/tool_draw.png"),
-            bmpDisabled=wx.NullBitmap,
             kind=wx.ITEM_CHECK,
-            shortHelp=wx.EmptyString,
-            longHelp=wx.EmptyString,
-            clientData=None,
         )
 
         self.tool_bar.AddSeparator()
@@ -159,11 +136,7 @@ class SpriteHitboxGenerator(wx.Frame):
             toolId=wx.ID_ANY,
             label="Colour Picker",
             bitmap=wx.Bitmap(name="assets/tool_colour_picker.png"),
-            bmpDisabled=wx.NullBitmap,
             kind=wx.ITEM_NORMAL,
-            shortHelp=wx.EmptyString,
-            longHelp=wx.EmptyString,
-            clientData=None,
         )
 
         self.tool_bar.Realize()
