@@ -36,9 +36,23 @@ class SpriteHitboxGenerator(wx.Frame):
         self.SetSizer(sizer)
         self.Layout()
 
-        # Main menu bar
-        self.main_menu_bar = wx.MenuBar(0)
+        self.InitMenuBar()
+        self.InitToolBar()
+
+        self.Centre(wx.BOTH)
+
+        self.Bind(wx.EVT_MENU, self.onFileMenuNew, id=self.file_menu_new.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
+
+        self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
+        self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
+        self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
+
+    def InitFileMenu(self):
         self.file_menu = wx.Menu()
+
         self.file_menu_new = wx.MenuItem(
             parentMenu=self.file_menu,
             id=wx.ID_ANY,
@@ -92,13 +106,18 @@ class SpriteHitboxGenerator(wx.Frame):
         )
         self.file_menu.Append(self.file_menu_exit)
 
-        self.main_menu_bar.Append(self.file_menu, "File")
+    def InitMenuBar(self):
+        self.menu_bar = wx.MenuBar(0)
 
-        self.SetMenuBar(self.main_menu_bar)
+        self.InitFileMenu()
+        self.menu_bar.Append(self.file_menu, "File")
 
+        self.SetMenuBar(self.menu_bar)
+
+    def InitToolBar(self):
         self.tool_bar = self.CreateToolBar(
-            wx.TB_VERTICAL,
-            wx.ID_ANY,
+            style=wx.TB_VERTICAL,
+            id=wx.ID_ANY,
         )
 
         self.tool_move = self.tool_bar.AddTool(
@@ -139,17 +158,6 @@ class SpriteHitboxGenerator(wx.Frame):
         )
 
         self.tool_bar.Realize()
-
-        self.Centre(wx.BOTH)
-
-        self.Bind(wx.EVT_MENU, self.onFileMenuNew, id=self.file_menu_new.GetId())
-        self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
-        self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
-        self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
-
-        self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
-        self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
-        self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
 
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 

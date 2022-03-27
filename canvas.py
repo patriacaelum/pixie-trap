@@ -43,6 +43,65 @@ class Canvas(wx.Panel):
 
         self.bmp_loaded = True
 
+    def PaintBMP(self, gc):
+        if self.bmp_loaded:
+            gc.DrawBitmap(
+                bmp=self.bmp,
+                x=0,
+                y=0,
+                w=self.bmp.GetWidth(),
+                h=self.bmp.GetHeight(),
+            )
+
+    def PaintHitboxes(self, gc):
+        for hitbox in self.hitboxes.values():
+            if hitbox.w <= 0 or hitbox.h <= 0:
+                continue
+
+            bmp = wx.Bitmap.FromRGBA(
+                width=hitbox.w,
+                height=hitbox.h,
+                red=self.hitbox_colour.red,
+                green=self.hitbox_colour.green,
+                blue=self.hitbox_colour.blue,
+                alpha=50,
+            )
+
+            gc.DrawBitmap(
+                bmp=bmp,
+                x=hitbox.x,
+                y=hitbox.y,
+                w=hitbox.w,
+                h=hitbox.h,
+            )
+
+    def PaintScale(self, gc):
+        gc.SetPen(wx.Pen(
+            colour=wx.Colour(0, 0, 0, 100),
+            width=2)
+        )
+        hitbox = self.hitboxes[self.hitbox_select]
+
+        gc.DrawEllipse(
+            x=int(hitbox.centre.x - self.scale_radius),
+            y=int(hitbox.centre.y - self.scale_radius),
+            w=int(2 * self.scale_radius),
+            h=int(2 * self.scale_radius),
+        )
+
+        self.scale_rects.Set(
+            rect=hitbox,
+            radius=self.scale_radius,
+        )
+
+        for rectangle in self.scale_rects.rects.values():
+            gc.DrawRectangle(
+                x=rectangle.x,
+                y=rectangle.y,
+                w=rectangle.w,
+                h=rectangle.h,
+            )
+
     def Save(self, path):
         try:
             with open(path, "w") as file:
@@ -136,61 +195,10 @@ class Canvas(wx.Panel):
         dc = wx.PaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
 
-        if self.bmp_loaded:
-            gc.DrawBitmap(
-                bmp=self.bmp,
-                x=0,
-                y=0,
-                w=self.bmp.GetWidth(),
-                h=self.bmp.GetHeight(),
-            )
-
-        for hitbox in self.hitboxes.values():
-            if hitbox.w <= 0 or hitbox.h <= 0:
-                continue
-
-            bmp = wx.Bitmap.FromRGBA(
-                width=hitbox.w,
-                height=hitbox.h,
-                red=self.hitbox_colour.red,
-                green=self.hitbox_colour.green,
-                blue=self.hitbox_colour.blue,
-                alpha=50,
-            )
-
-            gc.DrawBitmap(
-                bmp=bmp,
-                x=hitbox.x,
-                y=hitbox.y,
-                w=hitbox.w,
-                h=hitbox.h,
-            )
+        self.PaintBMP(gc)
+        self.PaintHitboxes(gc)
 
         if self.state == State.MOVE and self.hitbox_select is not None:
-            gc.SetPen(wx.Pen(
-                colour=wx.Colour(0, 0, 0, 100),
-                width=2)
-            )
-            hitbox = self.hitboxes[self.hitbox_select]
-
-            gc.DrawEllipse(
-                x=int(hitbox.centre.x - self.scale_radius),
-                y=int(hitbox.centre.y - self.scale_radius),
-                w=int(2 * self.scale_radius),
-                h=int(2 * self.scale_radius),
-            )
-
-            self.scale_rects.Set(
-                rect=hitbox,
-                radius=self.scale_radius,
-            )
-
-            for rectangle in self.scale_rects.rects.values():
-                gc.DrawRectangle(
-                    x=rectangle.x,
-                    y=rectangle.y,
-                    w=rectangle.w,
-                    h=rectangle.h,
-                )
+            self.PaintScale(gc)
 
         self.saved = False

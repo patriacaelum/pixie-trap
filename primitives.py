@@ -32,7 +32,6 @@ class Rect:
             self.w -= dx
 
         elif scale == Scale.RIGHT:
-            print("scaling right", dx)
             self.w += dx
 
         elif scale == Scale.BOTTOM:
