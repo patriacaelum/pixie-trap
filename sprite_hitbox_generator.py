@@ -1,8 +1,9 @@
 import os
 import wx
 
-from enums import State
 from canvas import Canvas
+from enums import State
+from inspector import Inspector
 
 
 IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
@@ -23,17 +24,25 @@ class SpriteHitboxGenerator(wx.Frame):
         # Main panel
         self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
 
-        sizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        main_sizer = wx.BoxSizer(orient=wx.HORIZONTAL)
 
         self.canvas = Canvas(parent=self)
-        sizer.Add(
+        main_sizer.Add(
             window=self.canvas,
             proportion=1,
             flag=wx.ALL | wx.EXPAND,
             border=5,
         )
 
-        self.SetSizer(sizer)
+        self.inspector = Inspector(parent=self)
+        main_sizer.Add(
+            window=self.inspector,
+            proportion=1,
+            flag=wx.ALL | wx.EXPAND,
+            border=5,
+        )
+
+        self.SetSizer(main_sizer)
         self.Layout()
 
         self.InitMenuBar()
