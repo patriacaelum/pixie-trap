@@ -1,6 +1,7 @@
 import wx
 
 from constants import State
+from constants import HitboxSelectedEvent
 from primitives import Point, Rect, ScaleRects
 
 
@@ -24,6 +25,7 @@ class Canvas(wx.Panel):
         self.left_down = Point()
 
         self.bmp = wx.Bitmap()
+        self.bmp_position = Rect()
         
         self.Bind(wx.EVT_LEFT_DOWN, self.onLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
@@ -34,6 +36,12 @@ class Canvas(wx.Panel):
     def LoadImage(self, path):
         """Reads and loads an image file to the canvas."""
         self.bmp.LoadFile(name=path)
+        self.bmp_position.Set(
+            x=0, 
+            y=0, 
+            w=self.bmp.GetWidth(), 
+            h=self.bmp.GetHeight()
+        )
 
         self.bmp_loaded = True
 
@@ -41,10 +49,10 @@ class Canvas(wx.Panel):
         if self.bmp_loaded:
             gc.DrawBitmap(
                 bmp=self.bmp,
-                x=0,
-                y=0,
-                w=self.bmp.GetWidth(),
-                h=self.bmp.GetHeight(),
+                x=self.bmp_position.x,
+                y=self.bmp_position.y,
+                w=self.bmp_position.w,
+                h=self.bmp_position.h,
             )
 
     def PaintHitboxes(self, gc):
@@ -116,6 +124,7 @@ class Canvas(wx.Panel):
                 for label, hitbox in self.hitboxes.items():
                     if hitbox.Contains(self.left_down):
                         self.hitbox_select = label
+                        wx.PostEvent(self.Parent, HitboxSelectedEvent())
 
                         break
 
@@ -127,7 +136,8 @@ class Canvas(wx.Panel):
                 x=self.left_down.x,
                 y=self.left_down.y,
                 w=0,
-                h=0
+                h=0,
+                label=f"box{self.hitbox_select}",
             )
 
             self.n_hitboxes_created += 1
@@ -168,12 +178,14 @@ class Canvas(wx.Panel):
 
             self.left_down.Set(x=x, y=y)
 
+            wx.PostEvent(self.Parent, HitboxSelectedEvent())
+
             self.Refresh()
 
         elif self.state == State.DRAW:
             self.hitboxes[self.hitbox_select].Set(
                 x=min(x, self.left_down.x),
-                y= min(y, self.left_down.y),
+                y=min(y, self.left_down.y),
                 w=abs(x - self.left_down.x),
                 h=abs(y - self.left_down.y),
             )

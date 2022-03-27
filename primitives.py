@@ -11,7 +11,9 @@ class Point:
 
 
 class Rect:
-    def __init__(self, x=0, y=0, w=0, h=0):
+    def __init__(self, x=0, y=0, w=0, h=0, label=""):
+        self.label = label
+
         self.Set(x, y, w, h)
 
     def Contains(self, point):

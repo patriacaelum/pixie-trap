@@ -2,7 +2,10 @@ import os
 import wx
 
 from canvas import Canvas
-from constants import State, EXPAND, IMAGE_WILDCARD, JSON_WILDCARD
+from constants import State
+from constants import EXPAND
+from constants import IMAGE_WILDCARD, JSON_WILDCARD
+from constants import EVT_HITBOX_SELECTED
 from inspector import Inspector
 
 
@@ -54,6 +57,12 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
+
+        self.Bind(EVT_HITBOX_SELECTED, self.onHitboxSelected)
+
+        self.inspector.DisableHitboxProperties()
+        self.inspector.DisableSpriteProperties()
+        self.inspector.DisableSpritesheetProperties()
 
     def InitFileMenu(self):
         self.file_menu = wx.Menu()
@@ -149,6 +158,21 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 
+    def onHitboxSelected(self, event):
+        """Updates the hitbox properties in the inspector."""
+        hitbox = self.canvas.hitboxes[self.canvas.hitbox_select]
+        canvas = self.canvas.bmp_position
+
+        self.inspector.hitbox_label.SetValue(hitbox.label)
+        self.inspector.hitbox_global_x.SetValue(str(hitbox.x - canvas.x))
+        self.inspector.hitbox_global_y.SetValue(str(hitbox.y - canvas.y))
+        self.inspector.hitbox_local_x.SetValue(str(hitbox.x - canvas.x))
+        self.inspector.hitbox_local_y.SetValue(str(hitbox.y - canvas.y))
+        self.inspector.hitbox_width.SetValue(str(hitbox.w))
+        self.inspector.hitbox_height.SetValue(str(hitbox.h))
+
+        self.inspector.EnableHitboxProperties()
+
     def Open(self):
         """Create and show the `wx.FileDialog` to open an image."""
         with wx.FileDialog(
@@ -163,6 +187,7 @@ class SpriteHitboxGenerator(wx.Frame):
                 return
 
             self.canvas.LoadImage(dialog.GetPath())
+            self.inspector.EnableSpritesheetProperties()
 
         self.Refresh()
 

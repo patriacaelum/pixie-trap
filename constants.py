@@ -1,13 +1,18 @@
 import enum
 import wx
 
+from wx.lib.newevent import NewEvent
+
+
+IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
+JSON_WILDCARD = "JSON files (*.json)|*.json"
+
 
 EXPAND = wx.ALL | wx.EXPAND
 CENTER_RIGHT = wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL
 
 
-IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
-JSON_WILDCARD = "JSON files (*.json)|*.json"
+HitboxSelectedEvent, EVT_HITBOX_SELECTED = NewEvent()
 
 
 class State(enum.Enum):
