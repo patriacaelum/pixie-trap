@@ -43,6 +43,9 @@ class Inspector(wx.Panel):
         self.hitbox_height_label.Disable()
         self.hitbox_height.Disable()
 
+        self.transparency_label.Disable()
+        self.transparency.Disable()
+
     def DisableSpriteProperties(self):
         self.sprite_line_label.Disable()
         self.sprite_line_widget.Disable()
@@ -52,9 +55,6 @@ class Inspector(wx.Panel):
 
         self.sprite_label_label.Disable()
         self.sprite_label.Disable()
-
-        self.transparency_label.Disable()
-        self.transparency.Disable()
 
         self.Enable_hitboxes_label.Disable()
         self.Enable_hitboxes.Disable()
@@ -66,11 +66,11 @@ class Inspector(wx.Panel):
         self.spritesheet_header.Disable()
         self.spritesheet_header_blank.Disable()
 
-        self.spritesheet_width_label.Disable()
-        self.spritesheet_width.Disable()
+        self.spritesheet_rows_label.Disable()
+        self.spritesheet_rows.Disable()
 
-        self.spritesheet_height_label.Disable()
-        self.spritesheet_height.Disable()
+        self.spritesheet_cols_label.Disable()
+        self.spritesheet_cols.Disable()
 
     def EnableHitboxProperties(self):
         self.hitbox_line_label.Enable()
@@ -100,6 +100,9 @@ class Inspector(wx.Panel):
         self.hitbox_height_label.Enable()
         self.hitbox_height.Enable()
 
+        self.transparency_label.Enable()
+        self.transparency.Enable()
+
     def EnableSpriteProperties(self):
         self.sprite_line_label.Enable()
         self.sprite_line_widget.Enable()
@@ -109,9 +112,6 @@ class Inspector(wx.Panel):
 
         self.sprite_label_label.Enable()
         self.sprite_label.Enable()
-
-        self.transparency_label.Enable()
-        self.transparency.Enable()
 
         self.Enable_hitboxes_label.Enable()
         self.Enable_hitboxes.Enable()
@@ -123,11 +123,11 @@ class Inspector(wx.Panel):
         self.spritesheet_header.Enable()
         self.spritesheet_header_blank.Enable()
 
-        self.spritesheet_width_label.Enable()
-        self.spritesheet_width.Enable()
+        self.spritesheet_rows_label.Enable()
+        self.spritesheet_rows.Enable()
 
-        self.spritesheet_height_label.Enable()
-        self.spritesheet_height.Enable()
+        self.spritesheet_cols_label.Enable()
+        self.spritesheet_cols.Enable()
 
     def InitHitboxProperties(self):
         self.hitbox_line_label = wx.StaticLine(parent=self)
@@ -158,6 +158,16 @@ class Inspector(wx.Panel):
         self.hitbox_height_label = wx.StaticText(parent=self, label="Height")
         self.hitbox_height = wx.TextCtrl(parent=self, size=(180, -1))
 
+        self.transparency_label = wx.StaticText(parent=self, label="Transparency")
+        self.transparency = wx.Slider(
+            parent=self,
+            value=50,
+            minValue=0,
+            maxValue=255,
+            size=(180, -1),
+            style=wx.SL_HORIZONTAL | wx.SL_MIN_MAX_LABELS,
+        )
+
     def InitSpriteProperties(self):
         self.sprite_line_label = wx.StaticLine(parent=self)
         self.sprite_line_widget = wx.StaticLine(parent=self)
@@ -168,16 +178,6 @@ class Inspector(wx.Panel):
 
         self.sprite_label_label = wx.StaticText(parent=self, label="Label")
         self.sprite_label = wx.TextCtrl(parent=self, size=(180, -1))
-
-        self.transparency_label = wx.StaticText(parent=self, label="Transparency")
-        self.transparency = wx.Slider(
-            parent=self,
-            value=50,
-            minValue=0,
-            maxValue=100,
-            size=(180, -1),
-            style=wx.SL_HORIZONTAL,
-        )
 
         self.Enable_hitboxes_label = wx.StaticText(parent=self, label="Isolate")
         self.Enable_hitboxes = wx.CheckBox(parent=self, label="Enable All")
@@ -190,11 +190,21 @@ class Inspector(wx.Panel):
         self.spritesheet_header.SetFont(wx.Font(wx.FontInfo().Bold()))
         self.spritesheet_header_blank = wx.StaticText(parent=self, label="")
 
-        self.spritesheet_width_label = wx.StaticText(parent=self, label="Width")
-        self.spritesheet_width = wx.TextCtrl(parent=self, size=(180, -1))
+        self.spritesheet_rows_label = wx.StaticText(parent=self, label="Rows")
+        self.spritesheet_rows = wx.TextCtrl(
+            parent=self, 
+            size=(180, -1), 
+            value="1",
+            style=wx.TE_PROCESS_ENTER,
+        )
 
-        self.spritesheet_height_label = wx.StaticText(parent=self, label="Height")
-        self.spritesheet_height = wx.TextCtrl(parent=self, size=(180, -1))
+        self.spritesheet_cols_label = wx.StaticText(parent=self, label="Columns")
+        self.spritesheet_cols = wx.TextCtrl(
+            parent=self, 
+            size=(180, -1), 
+            value="1",
+            style=wx.TE_PROCESS_ENTER,
+        )
 
     def SizeWidgets(self):
         sizer = wx.FlexGridSizer(cols=2, vgap=10, hgap=5)
@@ -206,10 +216,10 @@ class Inspector(wx.Panel):
         sizer.Add(window=self.spritesheet_line_widget, flag=EXPAND)
         sizer.Add(window=self.spritesheet_header, flag=EXPAND)
         sizer.Add(window=self.spritesheet_header_blank, flag=EXPAND)
-        sizer.Add(window=self.spritesheet_width_label, flag=CENTER_RIGHT)
-        sizer.Add(window=self.spritesheet_width, flag=EXPAND)
-        sizer.Add(window=self.spritesheet_height_label, flag=CENTER_RIGHT)
-        sizer.Add(window=self.spritesheet_height, flag=EXPAND)
+        sizer.Add(window=self.spritesheet_rows_label, flag=CENTER_RIGHT)
+        sizer.Add(window=self.spritesheet_rows, flag=EXPAND)
+        sizer.Add(window=self.spritesheet_cols_label, flag=CENTER_RIGHT)
+        sizer.Add(window=self.spritesheet_cols, flag=EXPAND)
 
         #####################
         # Sprite Properties #
@@ -220,8 +230,6 @@ class Inspector(wx.Panel):
         sizer.Add(window=self.sprite_header_blank, flag=EXPAND)
         sizer.Add(window=self.sprite_label_label, flag=CENTER_RIGHT)
         sizer.Add(window=self.sprite_label, flag=EXPAND)
-        sizer.Add(window=self.transparency_label, flag=CENTER_RIGHT)
-        sizer.Add(window=self.transparency, flag=EXPAND)
         sizer.Add(window=self.Enable_hitboxes_label, flag=CENTER_RIGHT)
         sizer.Add(window=self.Enable_hitboxes, flag=wx.ALIGN_RIGHT)
 
@@ -246,6 +254,8 @@ class Inspector(wx.Panel):
         sizer.Add(window=self.hitbox_width, flag=EXPAND)
         sizer.Add(window=self.hitbox_height_label, flag=CENTER_RIGHT)
         sizer.Add(window=self.hitbox_height, flag=EXPAND)
+        sizer.Add(window=self.transparency_label, flag=CENTER_RIGHT)
+        sizer.Add(window=self.transparency, flag=EXPAND)
 
         self.SetSizer(sizer)
         self.Layout()

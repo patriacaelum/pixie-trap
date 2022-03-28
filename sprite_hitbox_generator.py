@@ -49,14 +49,25 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Centre(wx.BOTH)
 
+        self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheel)
+
         self.Bind(wx.EVT_MENU, self.onFileMenuNew, id=self.file_menu_new.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
 
+        self.Bind(wx.EVT_TOOL, self.onToolSelect, id=self.tool_select.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
+
+        self.Bind(wx.EVT_TEXT, self.onSpritesheetProperties, id=self.inspector.spritesheet_rows.GetId())
+        self.Bind(wx.EVT_TEXT, self.onSpritesheetProperties, id=self.inspector.spritesheet_cols.GetId())
+
+        self.Bind(wx.EVT_TEXT_ENTER, self.onSpritesheetProperties, id=self.inspector.spritesheet_rows.GetId())
+        self.Bind(wx.EVT_TEXT_ENTER, self.onSpritesheetProperties, id=self.inspector.spritesheet_cols.GetId())
+
+        self.Bind(wx.EVT_SLIDER, self.onTransparency, id=self.inspector.transparency.GetId())
 
         self.Bind(EVT_HITBOX_SELECTED, self.onHitboxSelected)
 
@@ -129,6 +140,15 @@ class SpriteHitboxGenerator(wx.Frame):
             id=wx.ID_ANY,
         )
 
+        self.tool_select = self.tool_bar.AddTool(
+            toolId=wx.ID_ANY,
+            label="Select",
+            bitmap=wx.Bitmap(name="assets/tool_select.png"),
+            kind=wx.ITEM_CHECK,
+        )
+
+        self.tool_bar.AddSeparator()
+
         self.tool_move = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Move",
@@ -158,21 +178,6 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
 
-    def onHitboxSelected(self, event):
-        """Updates the hitbox properties in the inspector."""
-        hitbox = self.canvas.hitboxes[self.canvas.hitbox_select]
-        canvas = self.canvas.bmp_position
-
-        self.inspector.hitbox_label.SetValue(hitbox.label)
-        self.inspector.hitbox_global_x.SetValue(str(hitbox.x - canvas.x))
-        self.inspector.hitbox_global_y.SetValue(str(hitbox.y - canvas.y))
-        self.inspector.hitbox_local_x.SetValue(str(hitbox.x - canvas.x))
-        self.inspector.hitbox_local_y.SetValue(str(hitbox.y - canvas.y))
-        self.inspector.hitbox_width.SetValue(str(hitbox.w))
-        self.inspector.hitbox_height.SetValue(str(hitbox.h))
-
-        self.inspector.EnableHitboxProperties()
-
     def Open(self):
         """Create and show the `wx.FileDialog` to open an image."""
         with wx.FileDialog(
@@ -187,7 +192,11 @@ class SpriteHitboxGenerator(wx.Frame):
                 return
 
             self.canvas.LoadImage(dialog.GetPath())
-            self.inspector.EnableSpritesheetProperties()
+
+        self.inspector.spritesheet_rows.SetValue(str(1))
+        self.inspector.spritesheet_cols.SetValue(str(1))
+
+        self.inspector.EnableSpritesheetProperties()
 
         self.Refresh()
 
@@ -233,6 +242,49 @@ class SpriteHitboxGenerator(wx.Frame):
         """Create and show the `wx.FileDialog` to save the current canvas."""
         self.Save()
 
+    def onHitboxSelected(self, event):
+        """Updates the hitbox properties in the inspector."""
+        hitbox = self.canvas.hitboxes[self.canvas.hitbox_select]
+        canvas = self.canvas.bmp_position
+
+        self.inspector.hitbox_label.SetValue(hitbox.label)
+        self.inspector.hitbox_global_x.SetValue(str(hitbox.x - canvas.x))
+        self.inspector.hitbox_global_y.SetValue(str(hitbox.y - canvas.y))
+        self.inspector.hitbox_local_x.SetValue(str(hitbox.x - canvas.x))
+        self.inspector.hitbox_local_y.SetValue(str(hitbox.y - canvas.y))
+        self.inspector.hitbox_width.SetValue(str(hitbox.w))
+        self.inspector.hitbox_height.SetValue(str(hitbox.h))
+
+        self.inspector.EnableHitboxProperties()
+
+    def onMouseWheel(self, event):
+        """Zooms in or out of the canvas."""
+        if not self.canvas.bmp_loaded:
+            return
+
+        rotation = event.GetWheelRotation()
+
+        if rotation > 0:
+            self.canvas.bmp_magnify += 1
+        elif rotation < 0:
+            self.canvas.bmp_magnify -= 1
+
+        magnify = self.canvas.bmp_magnify
+
+        if magnify <= 0:
+            magnify = 1 / (2 - 2 * magnify)
+
+        width, height = self.canvas.bmp.GetSize()
+        self.canvas.bmp_position.w = int(width * magnify)
+        self.canvas.bmp_position.h = int(height * magnify)
+
+        self.Refresh()
+
+    def onSpritesheetProperties(self, event):
+        """Updates the canvas rulers."""
+        self.canvas.rows = int(self.inspector.spritesheet_rows.GetValue())
+        self.canvas.cols = int(self.inspector.spritesheet_cols.GetValue())
+
     def onToolColourPicker(self, event):
         """Opens the colour dialog and sets the draw colour."""
         with wx.ColourDialog(parent=self) as dialog:
@@ -254,6 +306,7 @@ class SpriteHitboxGenerator(wx.Frame):
         self.canvas.state = State.DRAW
         self.canvas.hitbox_select = None
 
+        self.tool_bar.ToggleTool(self.tool_select.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), True)
         self.tool_bar.ToggleTool(self.tool_move.GetId(), False)
 
@@ -263,7 +316,30 @@ class SpriteHitboxGenerator(wx.Frame):
         """Toggles the move tool on."""
         self.canvas.state = State.MOVE
 
+        self.tool_bar.ToggleTool(self.tool_select.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
+
+        self.Refresh()
+
+    def onToolSelect(self, event):
+        """Toggles the select tool on."""
+        self.canvas.state = State.SELECT
+
+        self.tool_bar.ToggleTool(self.tool_select.GetId(), True)
+        self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
+        self.tool_bar.ToggleTool(self.tool_move.GetId(), False)
+
+        self.Refresh()
+
+    def onTransparency(self, event):
+        """Updates the hitbox transparency."""
+        colour = self.canvas.hitbox_colour
+        self.canvas.hitbox_colour.Set(
+            colour.red,
+            colour.green,
+            colour.blue,
+            self.inspector.transparency.GetValue()
+        )
 
         self.Refresh()

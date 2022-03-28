@@ -16,6 +16,7 @@ HitboxSelectedEvent, EVT_HITBOX_SELECTED = NewEvent()
 
 
 class State(enum.Enum):
+    SELECT = enum.auto()
     MOVE = enum.auto()
     DRAW = enum.auto()
 

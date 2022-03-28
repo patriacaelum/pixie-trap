@@ -13,6 +13,14 @@ class Canvas(wx.Panel):
         self.state = State.MOVE
         self.saved = True
 
+        self.left_down = Point()
+
+        self.bmp = wx.Bitmap()
+        self.bmp_position = Rect()
+        self.bmp_magnify = 1
+        self.rows = 1
+        self.cols = 1
+
         self.hitboxes = dict()
         self.n_hitboxes_created = 0
         self.hitbox_colour = wx.Colour(255, 50, 0, 50)
@@ -21,15 +29,10 @@ class Canvas(wx.Panel):
         self.scale_select = None
         self.scale_radius = 5
         self.scale_rects = ScaleRects()
-
-        self.left_down = Point()
-
-        self.bmp = wx.Bitmap()
-        self.bmp_position = Rect()
         
         self.Bind(wx.EVT_LEFT_DOWN, self.onLeftDown)
-        self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
         self.Bind(wx.EVT_MOTION, self.onMotion)
+        self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
@@ -46,14 +49,13 @@ class Canvas(wx.Panel):
         self.bmp_loaded = True
 
     def PaintBMP(self, gc):
-        if self.bmp_loaded:
-            gc.DrawBitmap(
-                bmp=self.bmp,
-                x=self.bmp_position.x,
-                y=self.bmp_position.y,
-                w=self.bmp_position.w,
-                h=self.bmp_position.h,
-            )
+        gc.DrawBitmap(
+            bmp=self.bmp,
+            x=self.bmp_position.x,
+            y=self.bmp_position.y,
+            w=self.bmp_position.w,
+            h=self.bmp_position.h,
+        )
 
     def PaintHitboxes(self, gc):
         for hitbox in self.hitboxes.values():
@@ -66,7 +68,7 @@ class Canvas(wx.Panel):
                 red=self.hitbox_colour.red,
                 green=self.hitbox_colour.green,
                 blue=self.hitbox_colour.blue,
-                alpha=50,
+                alpha=self.hitbox_colour.alpha,
             )
 
             gc.DrawBitmap(
@@ -76,6 +78,31 @@ class Canvas(wx.Panel):
                 w=hitbox.w,
                 h=hitbox.h,
             )
+
+    def PaintRulers(self, dc):
+        dc.SetPen(wx.Pen(
+            colour=wx.Colour(0, 255, 255, 100),
+            width=2
+        ))
+
+        canvas_width, canvas_height = self.GetSize()
+
+        position = self.bmp_position
+
+        vspace = int(position.h // self.rows)
+        hspace = int(position.w // self.cols)
+
+        dc.DrawLineList([
+            (0, position.y + y, canvas_width, position.y + y)
+            for y in range(0, position.h + 1, vspace)
+        ])
+
+        dc.DrawLineList([
+            (position.x + x, 0, position.x + x, canvas_height)
+            for x in range(0, position.w + 1, hspace)
+        ])
+
+        print([position.x + x for x in range(0, position.w + 1, hspace)])
 
     def PaintScale(self, gc):
         gc.SetPen(wx.Pen(
@@ -103,6 +130,10 @@ class Canvas(wx.Panel):
                 w=rectangle.w,
                 h=rectangle.h,
             )
+
+    def PaintSelect(self, gc):
+        """Paints the selection zone."""
+        pass
 
     def Save(self, path):
         try:
@@ -201,10 +232,15 @@ class Canvas(wx.Panel):
         dc = wx.PaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
 
-        self.PaintBMP(gc)
+        if self.bmp_loaded:
+            self.PaintBMP(gc)
+            self.PaintRulers(dc)
+
         self.PaintHitboxes(gc)
 
-        if self.state == State.MOVE and self.hitbox_select is not None:
+        if self.state == State.SELECT:
+            self.PaintSelect(gc)
+        elif self.state == State.MOVE and self.hitbox_select is not None:
             self.PaintScale(gc)
 
         self.saved = False
