@@ -12,7 +12,7 @@ EXPAND = wx.ALL | wx.EXPAND
 CENTER_RIGHT = wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL
 
 
-HitboxSelectedEvent, EVT_HITBOX_SELECTED = NewEvent()
+UpdateInspectorHitboxEvent, EVT_UPDATE_INSPECTOR_HITBOX = NewEvent()
 
 
 class State(enum.Enum):

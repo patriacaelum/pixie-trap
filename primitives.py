@@ -6,8 +6,11 @@ class Point:
         self.Set(x, y)
 
     def Set(self, x, y):
-        self.x = x
-        self.y = y
+        self.x = int(x)
+        self.y = int(y)
+
+    def __str__(self):
+        return f"x={self.x}, y={self.y}"
 
 
 class Rect:
@@ -60,10 +63,10 @@ class Rect:
             self.h += dy
 
     def Set(self, x, y, w, h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+        self.x = int(x)
+        self.y = int(y)
+        self.w = int(w)
+        self.h = int(h)
 
     @property
     def center(self):
@@ -74,6 +77,9 @@ class Rect:
     def centre(self):
         """The centre point of the rectangle."""
         return Point(self.x + self.w / 2, self.y + self.h / 2)
+
+    def __str__(self):
+        return f"x={self.x}, y={self.y}, w={self.w}, h={self.h}"
 
 
 class ScaleRects:
@@ -107,62 +113,62 @@ class ScaleRects:
         else:
             return None
 
-    def Set(self, rect, radius):
+    def Set(self, rect, radius, factor):
         """Sets the scale rectangles based on the given rectangle and radius."""
         diametre = 2 * radius
 
         self.top.Set(
-            x=rect.centre.x - radius,
-            y=rect.y - radius,
+            x=rect.centre.x * factor - radius,
+            y=rect.y * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.left.Set(
-            x=rect.x - radius,
-            y=rect.centre.y - radius,
+            x=rect.x * factor - radius,
+            y=rect.centre.y * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.right.Set(
-            x=rect.x + rect.w - radius,
-            y=rect.centre.y - radius,
+            x=(rect.x + rect.w) * factor - radius,
+            y=rect.centre.y * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.bottom.Set(
-            x=rect.centre.x - radius,
-            y=rect.y + rect.h - radius,
+            x=rect.centre.x * factor - radius,
+            y=(rect.y + rect.h) * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.top_left.Set(
-            x=rect.x - radius,
-            y=rect.y - radius,
+            x=rect.x * factor - radius,
+            y=rect.y * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.top_right.Set(
-            x=rect.x + rect.w - radius,
-            y=rect.y - radius,
+            x=(rect.x + rect.w) * factor - radius,
+            y=rect.y * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.bottom_left.Set(
-            x=rect.x - radius,
-            y=rect.y + rect.h - radius,
+            x=rect.x * factor - radius,
+            y=(rect.y + rect.h) * factor - radius,
             w=diametre,
             h=diametre,
         )
 
         self.bottom_right.Set(
-            x=rect.x + rect.w - radius,
-            y=rect.y + rect.h - radius,
+            x=(rect.x + rect.w) * factor - radius,
+            y=(rect.y + rect.h) * factor - radius,
             w=diametre,
             h=diametre,
         )

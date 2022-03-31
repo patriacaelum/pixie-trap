@@ -1,7 +1,7 @@
 import wx
 
 from constants import State
-from constants import HitboxSelectedEvent
+from constants import UpdateInspectorHitboxEvent
 from primitives import Point, Rect, ScaleRects
 
 
@@ -13,16 +13,20 @@ class Canvas(wx.Panel):
         self.state = State.MOVE
         self.saved = True
 
+        self.magnify = 1
+        self.magnify_factor = 1
+
         self.left_down = Point()
+        self.middle_down = Point()
 
         self.bmp = wx.Bitmap()
         self.bmp_position = Rect()
-        self.bmp_magnify = 1
         self.rows = 1
         self.cols = 1
 
         self.hitboxes = dict()
         self.n_hitboxes_created = 0
+        self.hitbox_buffer = Point()
         self.hitbox_colour = wx.Colour(255, 50, 0, 50)
         self.hitbox_select = None
 
@@ -31,8 +35,12 @@ class Canvas(wx.Panel):
         self.scale_rects = ScaleRects()
         
         self.Bind(wx.EVT_LEFT_DOWN, self.onLeftDown)
-        self.Bind(wx.EVT_MOTION, self.onMotion)
         self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
+
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.onMiddleDown)
+
+        self.Bind(wx.EVT_MOTION, self.onMotion)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheel)
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
@@ -46,9 +54,13 @@ class Canvas(wx.Panel):
             h=self.bmp.GetHeight()
         )
 
+        self.magnify = 1
+        self.magnify_factor = 1
+
         self.bmp_loaded = True
 
     def PaintBMP(self, gc):
+        """Paints the loaded image to the canvas."""
         gc.DrawBitmap(
             bmp=self.bmp,
             x=self.bmp_position.x,
@@ -58,6 +70,7 @@ class Canvas(wx.Panel):
         )
 
     def PaintHitboxes(self, gc):
+        """Paints the drawn hitboxes to the canvas."""
         for hitbox in self.hitboxes.values():
             if hitbox.w <= 0 or hitbox.h <= 0:
                 continue
@@ -73,13 +86,14 @@ class Canvas(wx.Panel):
 
             gc.DrawBitmap(
                 bmp=bmp,
-                x=hitbox.x,
-                y=hitbox.y,
-                w=hitbox.w,
-                h=hitbox.h,
+                x=int(self.bmp_position.x + hitbox.x * self.magnify_factor),
+                y=int(self.bmp_position.y + hitbox.y * self.magnify_factor),
+                w=int(hitbox.w * self.magnify_factor),
+                h=int(hitbox.h * self.magnify_factor),
             )
 
     def PaintRulers(self, dc):
+        """Paints the rulers on the canvas."""
         dc.SetPen(wx.Pen(
             colour=wx.Colour(0, 255, 255, 100),
             width=2
@@ -102,9 +116,8 @@ class Canvas(wx.Panel):
             for x in range(0, position.w + 1, hspace)
         ])
 
-        print([position.x + x for x in range(0, position.w + 1, hspace)])
-
     def PaintScale(self, gc):
+        """Paints the transformation scaling pins on the selected hitbox."""
         gc.SetPen(wx.Pen(
             colour=wx.Colour(0, 0, 0, 100),
             width=2)
@@ -112,8 +125,8 @@ class Canvas(wx.Panel):
         hitbox = self.hitboxes[self.hitbox_select]
 
         gc.DrawEllipse(
-            x=int(hitbox.centre.x - self.scale_radius),
-            y=int(hitbox.centre.y - self.scale_radius),
+            x=int(self.bmp_position.x + hitbox.centre.x * self.magnify_factor - self.scale_radius),
+            y=int(self.bmp_position.y + hitbox.centre.y * self.magnify_factor - self.scale_radius),
             w=int(2 * self.scale_radius),
             h=int(2 * self.scale_radius),
         )
@@ -121,12 +134,13 @@ class Canvas(wx.Panel):
         self.scale_rects.Set(
             rect=hitbox,
             radius=self.scale_radius,
+            factor=self.magnify_factor,
         )
 
         for rectangle in self.scale_rects.rects.values():
             gc.DrawRectangle(
-                x=rectangle.x,
-                y=rectangle.y,
+                x=self.bmp_position.x + rectangle.x,
+                y=self.bmp_position.y + rectangle.y,
                 w=rectangle.w,
                 h=rectangle.h,
             )
@@ -143,19 +157,33 @@ class Canvas(wx.Panel):
             wx.LogError(f"Failed to save file in {path}")
 
     def onLeftDown(self, event):
-        """Records the location of the mouse click."""
-        self.left_down.Set(*event.GetPosition())
+        """Records the location of the mouse click.
+
+        If the `Move` tool is selected, then a hitbox is selected.
+        If the `Draw` tool is selected, then a hitbox is drawn.
+        """
+        x, y = event.GetPosition()
+
+        self.left_down.Set(x=x, y=y)
 
         if self.state == State.MOVE:
+            local_position = Point(
+                x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
+                y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
+            )
+
+            # Scale selected hitbox
             if self.hitbox_select is not None:
                 self.scale_select = self.scale_rects.SelectScale(self.left_down)
 
+            # Find a hitbox in the mouse position
             if self.scale_select is None:
-                # Find a hitbox in the mouse position
                 for label, hitbox in self.hitboxes.items():
-                    if hitbox.Contains(self.left_down):
+                    if hitbox.Contains(local_position):
+                        self.hitbox_buffer.Set(x=hitbox.x, y=hitbox.y)
                         self.hitbox_select = label
-                        wx.PostEvent(self.Parent, HitboxSelectedEvent())
+
+                        wx.PostEvent(self.Parent, UpdateInspectorHitboxEvent())
 
                         break
 
@@ -164,8 +192,8 @@ class Canvas(wx.Panel):
         elif self.state == State.DRAW:
             self.hitbox_select = self.n_hitboxes_created
             self.hitboxes[self.hitbox_select] = Rect(
-                x=self.left_down.x,
-                y=self.left_down.y,
+                x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
+                y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
                 w=0,
                 h=0,
                 label=f"box{self.hitbox_select}",
@@ -186,46 +214,97 @@ class Canvas(wx.Panel):
 
             self.hitbox_select = None
 
+    def onMiddleDown(self, event):
+        """Records the location of the mouse click."""
+        self.middle_down.Set(*event.GetPosition())
+
     def onMotion(self, event):
-        if not event.LeftIsDown():
-            return
+        """The action of motion depends on the button that is held down.
 
-        x, y = event.GetPosition()
+        If the left button is held down and the `Move` tool is selected, then
+        the hitbox is moved.
+        If the left button is held down and the `Draw` tool is selected, then
+        the hitbox is drawn.
+        If the middle button is held down, the canvas is panned.
+        """
+        if event.LeftIsDown() and self.hitbox_select is not None:
+            x, y = event.GetPosition()
 
-        dx = x - self.left_down.x
-        dy = y - self.left_down.y
+            hitbox = self.hitboxes[self.hitbox_select]
 
-        if self.state == State.MOVE:
-            if self.scale_select is not None:
-                self.hitboxes[self.hitbox_select].Scale(
-                    scale=self.scale_select,
-                    dx=dx,
-                    dy=dy,
+            if self.state == State.MOVE:
+                if self.scale_select is not None:
+                    dx = (x - self.left_down_buffer.x) // self.magnify_factor
+                    dy = (y - self.left_down_buffer.y) // self.magnify_factor
+
+                    self.left_down_buffer.Set(x=x, y=y)
+
+                    hitbox.Scale(
+                        scale=self.scale_select,
+                        dx=dx,
+                        dy=dy,
+                    )
+
+                else:
+                    dx = (x - self.left_down.x) // self.magnify_factor
+                    dy = (y - self.left_down.y) // self.magnify_factor
+
+                    print(x, self.left_down.x, dx)
+
+                    hitbox.x = self.hitbox_buffer.x + dx
+                    hitbox.y = self.hitbox_buffer.y + dy
+
+                wx.PostEvent(self.Parent, UpdateInspectorHitboxEvent())
+
+            elif self.state == State.DRAW:
+                dx = x - self.left_down.x
+                dy = y - self.left_down.y
+
+                hitbox.Set(
+                    x=(min(x, self.left_down.x) - self.bmp_position.x) // self.magnify_factor,
+                    y=(min(y, self.left_down.y) - self.bmp_position.y) // self.magnify_factor,
+                    w=abs(dx) // self.magnify_factor,
+                    h=abs(dy) // self.magnify_factor,
                 )
 
-            else:
-                self.hitboxes[self.hitbox_select].x += dx
-                self.hitboxes[self.hitbox_select].y += dy
+            self.Refresh()
 
-            self.left_down.Set(x=x, y=y)
+        elif event.MiddleIsDown():
+            x, y = event.GetPosition()
 
-            wx.PostEvent(self.Parent, HitboxSelectedEvent())
+            dx = x - self.middle_down.x
+            dy = y - self.middle_down.y
+
+            self.bmp_position.x += dx
+            self.bmp_position.y += dy
+
+            self.middle_down.Set(x, y)
 
             self.Refresh()
 
-        elif self.state == State.DRAW:
-            self.hitboxes[self.hitbox_select].Set(
-                x=min(x, self.left_down.x),
-                y=min(y, self.left_down.y),
-                w=abs(x - self.left_down.x),
-                h=abs(y - self.left_down.y),
-            )
+    def onMouseWheel(self, event):
+        """Zooms in or out of the canvas."""
+        if not self.bmp_loaded:
+            return
 
-            self.Refresh()
+        rotation = event.GetWheelRotation()
 
-    def onToolDrawDoubleClick(self, event):
-        """Selects the shape for resizing."""
-        pass
+        if rotation > 0:
+            self.magnify += 1
+        elif rotation < 0:
+            self.magnify -= 1
+
+        if self.magnify < 1:
+            self.magnify_factor = 1 / (2 - 2 * self.magnify)
+        else:
+            self.magnify_factor = self.magnify
+
+        width, height = self.bmp.GetSize()
+
+        self.bmp_position.w = int(width * self.magnify_factor)
+        self.bmp_position.h = int(height * self.magnify_factor)
+
+        self.Refresh()
 
     def onPaintCanvas(self, event):
         """Paints the background image and the hitboxes on the canvas."""

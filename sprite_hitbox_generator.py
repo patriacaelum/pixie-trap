@@ -5,7 +5,7 @@ from canvas import Canvas
 from constants import State
 from constants import EXPAND
 from constants import IMAGE_WILDCARD, JSON_WILDCARD
-from constants import EVT_HITBOX_SELECTED
+from constants import EVT_UPDATE_INSPECTOR_HITBOX
 from inspector import Inspector
 
 
@@ -49,8 +49,6 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Centre(wx.BOTH)
 
-        self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheel)
-
         self.Bind(wx.EVT_MENU, self.onFileMenuNew, id=self.file_menu_new.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
@@ -69,7 +67,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Bind(wx.EVT_SLIDER, self.onTransparency, id=self.inspector.transparency.GetId())
 
-        self.Bind(EVT_HITBOX_SELECTED, self.onHitboxSelected)
+        self.Bind(EVT_UPDATE_INSPECTOR_HITBOX, self.onHitboxSelected)
 
         self.inspector.DisableHitboxProperties()
         self.inspector.DisableSpriteProperties()
@@ -176,8 +174,6 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.tool_bar.Realize()
 
-        self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
-
     def Open(self):
         """Create and show the `wx.FileDialog` to open an image."""
         with wx.FileDialog(
@@ -256,29 +252,6 @@ class SpriteHitboxGenerator(wx.Frame):
         self.inspector.hitbox_height.SetValue(str(hitbox.h))
 
         self.inspector.EnableHitboxProperties()
-
-    def onMouseWheel(self, event):
-        """Zooms in or out of the canvas."""
-        if not self.canvas.bmp_loaded:
-            return
-
-        rotation = event.GetWheelRotation()
-
-        if rotation > 0:
-            self.canvas.bmp_magnify += 1
-        elif rotation < 0:
-            self.canvas.bmp_magnify -= 1
-
-        magnify = self.canvas.bmp_magnify
-
-        if magnify <= 0:
-            magnify = 1 / (2 - 2 * magnify)
-
-        width, height = self.canvas.bmp.GetSize()
-        self.canvas.bmp_position.w = int(width * magnify)
-        self.canvas.bmp_position.h = int(height * magnify)
-
-        self.Refresh()
 
     def onSpritesheetProperties(self, event):
         """Updates the canvas rulers."""
