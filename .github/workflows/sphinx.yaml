@@ -15,7 +15,7 @@ jobs:
           python-version: 3.9
 
       - name: install dependencies
-        run: python -m pip install sphinx
+        run: python -m pip install -r requirements.txt
 
       - name: build documentation
         run: |
@@ -24,9 +24,8 @@ jobs:
 
       - name: commit changes
         run: |
-          cd _build/html/
-          git init
-          touch .nojekyll
+          git clone https://github.com/patriacaelum/sprite-hitbox-generator.git --branch gh-pages --single-branch gh-pages
+          cp -r docs/_build/html/* gh-pages
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
