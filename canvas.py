@@ -287,6 +287,7 @@ class Canvas(wx.Panel):
         if not self.bmp_loaded:
             return
 
+        x, y = event.GetPosition()
         rotation = event.GetWheelRotation()
 
         if rotation > 0:
@@ -294,15 +295,21 @@ class Canvas(wx.Panel):
         elif rotation < 0:
             self.magnify -= 1
 
+        old_mag = self.magnify_factor
+
         if self.magnify < 1:
             self.magnify_factor = 1 / (2 - 2 * self.magnify)
         else:
             self.magnify_factor = self.magnify
 
-        width, height = self.bmp.GetSize()
+        w, h = self.bmp.GetSize()
 
-        self.bmp_position.w = int(width * self.magnify_factor)
-        self.bmp_position.h = int(height * self.magnify_factor)
+        self.bmp_position.Set(
+            x=x - (self.magnify_factor / old_mag) * (x - self.bmp_position.x),
+            y=y - (self.magnify_factor / old_mag) * (y - self.bmp_position.y),
+            w=w * self.magnify_factor,
+            h=h * self.magnify_factor,
+        )
 
         self.Refresh()
 
