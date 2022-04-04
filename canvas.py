@@ -24,6 +24,8 @@ class Canvas(wx.Panel):
         self.rows = 1
         self.cols = 1
 
+        self.select = Rect()
+
         self.hitboxes = dict()
         self.n_hitboxes_created = 0
         self.hitbox_buffer = Point()
@@ -146,8 +148,66 @@ class Canvas(wx.Panel):
             )
 
     def PaintSelect(self, gc):
-        """Paints the selection zone."""
-        pass
+        """Paints the selection zone.
+
+        If there is no selection zone, then the whole canvas is darkened.
+        """
+        w, h = self.GetSize()
+
+        bmp = wx.Bitmap.FromRGBA(
+            width=w,
+            height=h,
+            red=0,
+            green=0,
+            blue=0,
+            alpha=30,
+        )
+
+        if self.select.w == 0 and self.select.h == 0:
+            gc.DrawBitmap(
+                bmp=bmp,
+                x=0,
+                y=0,
+                w=w,
+                h=h,
+            )
+
+        else:
+            if self.select.x > 0 and self.select.y + self.select.h < h:
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=0,
+                    y=0,
+                    w=self.select.x,
+                    h=self.select.y + self.select.h,
+                )
+
+            if self.select.y > 0 and self.x < w:
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=self.select.x,
+                    y=0,
+                    w=w - self.select.x,
+                    h=self.select.y,
+                )
+
+            if self.select.x + self.select.w < w and self.select.y < h:
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=self.select.x + self.select.w,
+                    y=self.select.y,
+                    w=w - (self.select.x + self.select.w),
+                    h=h - self.select.y,
+                )
+
+            if self.select.x + self.select.w < 0 and self.select.y + self.select.h < h:
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=0,
+                    y=self.select.y + self.select.h,
+                    w=self.select.x + self.select.w,
+                    h=h - self.select.y + self.select.h,
+                )
 
     def Save(self, path):
         try:
@@ -166,7 +226,10 @@ class Canvas(wx.Panel):
 
         self.left_down.Set(x=x, y=y)
 
-        if self.state == State.MOVE:
+        if self.state == State.SELECT:
+            pass
+
+        elif self.state == State.MOVE:
             local_position = Point(
                 x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
                 y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
@@ -282,6 +345,44 @@ class Canvas(wx.Panel):
 
             self.Refresh()
 
+        elif self.state == State.SELECT:
+            x, y = event.GetPosition()
+
+            vrulers = list(range(
+                self.bmp_position.x, 
+                self.bmp_position.x + self.bmp_position.w + 1, 
+                int(self.bmp_position.w // self.cols)
+            ))
+            hrulers = list(range(
+                self.bmp_position.y, 
+                self.bmp_position.y + self.bmp_position.h + 1, 
+                int(self.bmp_position.h // self.rows)
+            ))
+
+            for col in range(len(vrulers) - 1):
+                for row in range(len(hrulers) - 1):
+                    rect = Rect(
+                        x=vrulers[col],
+                        y=hrulers[row],
+                        w=vrulers[col + 1] - vrulers[col],
+                        h=hrulers[row + 1] - hrulers[row],
+                    )
+
+                    if rect.Contains(Point(x=x, y=y)):
+                        self.select.Set(
+                            x=rect.x,
+                            y=rect.y,
+                            w=rect.w,
+                            h=rect.h,
+                        )
+
+                        break #BREAK OUT OF BOTH LOOPS?
+
+            else:
+                self.select.Set(0, 0, 0, 0)
+
+            print(self.select)
+
     def onMouseWheel(self, event):
         """Zooms in or out of the canvas."""
         if not self.bmp_loaded:
@@ -322,11 +423,10 @@ class Canvas(wx.Panel):
             self.PaintBMP(gc)
             self.PaintRulers(dc)
 
+        self.PaintSelect(gc)
         self.PaintHitboxes(gc)
 
-        if self.state == State.SELECT:
-            self.PaintSelect(gc)
-        elif self.state == State.MOVE and self.hitbox_select is not None:
+        if self.state == State.MOVE and self.hitbox_select is not None:
             self.PaintScale(gc)
 
         self.saved = False

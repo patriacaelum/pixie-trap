@@ -76,7 +76,7 @@ class Rect:
     @property
     def centre(self):
         """The centre point of the rectangle."""
-        return Point(self.x + self.w / 2, self.y + self.h / 2)
+        return Point(x=self.x + self.w / 2, y=self.y + self.h / 2)
 
     def __str__(self):
         return f"x={self.x}, y={self.y}, w={self.w}, h={self.h}"
