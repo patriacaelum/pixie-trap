@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
 
       - name: setup python
         uses: actions/setup-python@v2.2.1
@@ -18,12 +18,15 @@ jobs:
         run: python -m pip install sphinx
 
       - name: build documentation
-        run: make html
+        run: |
+          cd docs/
+          make html
 
       - name: commit changes
         run: |
-          git clone https://github.com/patriacaelum/sprite-hitbox-generator.git --branch -gh-pages -- single-branch gh-pages
-          cp -r docs/_build/html/* gh-pages
+          cd _build/html/
+          git init
+          touch .nojekyll
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
