@@ -1,3 +1,4 @@
+import numpy as np
 import wx
 
 from constants import State
@@ -45,6 +46,32 @@ class Canvas(wx.Panel):
         self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheel)
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
+
+    def FindSelectionZone(self, x, y):
+        """Finds the selection zone on the canvas.
+
+        If no selection zone is found, `None` is returned.
+        """
+        vrulers = np.arange(
+            self.bmp_position.x, 
+            self.bmp_position.x + self.bmp_position.w + 1, 
+            int(self.bmp_position.w // self.cols)
+        )
+        hrulers = np.arange(
+            self.bmp_position.y, 
+            self.bmp_position.y + self.bmp_position.h + 1, 
+            int(self.bmp_position.h // self.rows)
+        )
+
+        x_in = np.logical_and(vrulers[:-1] <= x, x < vrulers[1:])
+        y_in = np.logical_and(hrulers[:-1] <= y, y < hrulers[1:])
+
+        rect_x = np.sum(x_in * vrulers[:-1])
+        rect_y = np.sum(y_in * hrulers[:-1])
+        rect_w = np.sum(x_in * vrulers[1:]) - rect_x
+        rect_h = np.sum(y_in * hrulers[1:]) - rect_y
+
+        return rect_x, rect_y, rect_w, rect_h
 
     def LoadImage(self, path):
         """Reads and loads an image file to the canvas."""
@@ -154,16 +181,16 @@ class Canvas(wx.Panel):
         """
         w, h = self.GetSize()
 
-        bmp = wx.Bitmap.FromRGBA(
-            width=w,
-            height=h,
-            red=0,
-            green=0,
-            blue=0,
-            alpha=30,
-        )
-
         if self.select.w == 0 and self.select.h == 0:
+            bmp = wx.Bitmap.FromRGBA(
+                width=w,
+                height=h,
+                red=0,
+                green=0,
+                blue=0,
+                alpha=100,
+            )
+
             gc.DrawBitmap(
                 bmp=bmp,
                 x=0,
@@ -173,40 +200,81 @@ class Canvas(wx.Panel):
             )
 
         else:
-            if self.select.x > 0 and self.select.y + self.select.h < h:
+            top_left = Point(x=self.select.x, y=self.select.y)
+            top_right = Point(x=self.select.x + self.select.w, y=self.select.y)
+            bottom_left = Point(x=self.select.x, y=self.select.y + self.select.h)
+            bottom_right = Point(x=self.select.x + self.select.w, y=self.select.y + self.select.h)
+
+            if top_left.x < w and top_left.y > 0:
+                bmp = wx.Bitmap.FromRGBA(
+                    width=w - top_left.x,
+                    height=top_left.y,
+                    red=0,
+                    green=0,
+                    blue=0,
+                    alpha=100,
+                )
+
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=top_left.x,
+                    y=0,
+                    w=w - top_left.x,
+                    h=top_left.y,
+                )
+
+            if top_right.x < w and top_right.y < h:
+                bmp = wx.Bitmap.FromRGBA(
+                    width=w - top_right.x,
+                    height=h - top_right.y,
+                    red=0,
+                    green=0,
+                    blue=0,
+                    alpha=100,
+                )
+
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=top_right.x,
+                    y=top_right.y,
+                    w=w - top_right.x,
+                    h=h - top_right.y,
+                )
+
+            if bottom_left.x > 0 and bottom_left.y < h:
+                bmp = wx.Bitmap.FromRGBA(
+                    width=top_left.x,
+                    height=bottom_left.y,
+                    red=0,
+                    green=0,
+                    blue=0,
+                    alpha=100,
+                )
+
                 gc.DrawBitmap(
                     bmp=bmp,
                     x=0,
                     y=0,
-                    w=self.select.x,
-                    h=self.select.y + self.select.h,
+                    w=bottom_left.x,
+                    h=bottom_left.y,
                 )
 
-            if self.select.y > 0 and self.x < w:
-                gc.DrawBitmap(
-                    bmp=bmp,
-                    x=self.select.x,
-                    y=0,
-                    w=w - self.select.x,
-                    h=self.select.y,
+            if bottom_right.x > 0 and bottom_right.y < h:
+                bmp = wx.Bitmap.FromRGBA(
+                    width=bottom_right.x,
+                    height=h - bottom_right.y,
+                    red=0,
+                    green=0,
+                    blue=0,
+                    alpha=100,
                 )
 
-            if self.select.x + self.select.w < w and self.select.y < h:
-                gc.DrawBitmap(
-                    bmp=bmp,
-                    x=self.select.x + self.select.w,
-                    y=self.select.y,
-                    w=w - (self.select.x + self.select.w),
-                    h=h - self.select.y,
-                )
-
-            if self.select.x + self.select.w < 0 and self.select.y + self.select.h < h:
                 gc.DrawBitmap(
                     bmp=bmp,
                     x=0,
-                    y=self.select.y + self.select.h,
-                    w=self.select.x + self.select.w,
-                    h=h - self.select.y + self.select.h,
+                    y=bottom_right.y,
+                    w=bottom_right.x,
+                    h=h - bottom_right.y,
                 )
 
     def Save(self, path):
@@ -347,41 +415,9 @@ class Canvas(wx.Panel):
 
         elif self.state == State.SELECT:
             x, y = event.GetPosition()
+            self.select.Set(*self.FindSelectionZone(x, y))
 
-            vrulers = list(range(
-                self.bmp_position.x, 
-                self.bmp_position.x + self.bmp_position.w + 1, 
-                int(self.bmp_position.w // self.cols)
-            ))
-            hrulers = list(range(
-                self.bmp_position.y, 
-                self.bmp_position.y + self.bmp_position.h + 1, 
-                int(self.bmp_position.h // self.rows)
-            ))
-
-            for col in range(len(vrulers) - 1):
-                for row in range(len(hrulers) - 1):
-                    rect = Rect(
-                        x=vrulers[col],
-                        y=hrulers[row],
-                        w=vrulers[col + 1] - vrulers[col],
-                        h=hrulers[row + 1] - hrulers[row],
-                    )
-
-                    if rect.Contains(Point(x=x, y=y)):
-                        self.select.Set(
-                            x=rect.x,
-                            y=rect.y,
-                            w=rect.w,
-                            h=rect.h,
-                        )
-
-                        break #BREAK OUT OF BOTH LOOPS?
-
-            else:
-                self.select.Set(0, 0, 0, 0)
-
-            print(self.select)
+            self.Refresh()
 
     def onMouseWheel(self, event):
         """Zooms in or out of the canvas."""
@@ -423,7 +459,9 @@ class Canvas(wx.Panel):
             self.PaintBMP(gc)
             self.PaintRulers(dc)
 
-        self.PaintSelect(gc)
+        if self.state == State.SELECT or (self.select.w != 0 and self.select.h != 0):
+            self.PaintSelect(gc)
+
         self.PaintHitboxes(gc)
 
         if self.state == State.MOVE and self.hitbox_select is not None:
