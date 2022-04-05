@@ -26,6 +26,7 @@ class Canvas(wx.Panel):
         self.cols = 1
 
         self.select = Rect()
+        self.select_preview = Rect()
 
         self.hitboxes = dict()
         self.n_hitboxes_created = 0
@@ -66,10 +67,10 @@ class Canvas(wx.Panel):
         x_in = np.logical_and(vrulers[:-1] <= x, x < vrulers[1:])
         y_in = np.logical_and(hrulers[:-1] <= y, y < hrulers[1:])
 
-        rect_x = np.sum(x_in * vrulers[:-1])
-        rect_y = np.sum(y_in * hrulers[:-1])
-        rect_w = np.sum(x_in * vrulers[1:]) - rect_x
-        rect_h = np.sum(y_in * hrulers[1:]) - rect_y
+        rect_x = max(0, np.sum(x_in * vrulers[:-1]) - self.bmp_position.x)
+        rect_y = max(0, np.sum(y_in * hrulers[:-1]) - self.bmp_position.y)
+        rect_w = max(0, np.sum(x_in * vrulers[1:]) - rect_x - self.bmp_position.x)
+        rect_h = max(0, np.sum(y_in * hrulers[1:]) - rect_y - self.bmp_position.y)
 
         return rect_x, rect_y, rect_w, rect_h
 
@@ -181,7 +182,11 @@ class Canvas(wx.Panel):
         """
         w, h = self.GetSize()
 
-        if self.select.w == 0 and self.select.h == 0:
+        select = (self.select.w > 0 and self.select.h > 0)
+        preview = (self.select_preview.w > 0 and self.select_preview.h > 0)
+
+        if not select and not preview:
+            # Darken entire canvas
             bmp = wx.Bitmap.FromRGBA(
                 width=w,
                 height=h,
@@ -200,10 +205,42 @@ class Canvas(wx.Panel):
             )
 
         else:
-            top_left = Point(x=self.select.x, y=self.select.y)
-            top_right = Point(x=self.select.x + self.select.w, y=self.select.y)
-            bottom_left = Point(x=self.select.x, y=self.select.y + self.select.h)
-            bottom_right = Point(x=self.select.x + self.select.w, y=self.select.y + self.select.h)
+            if preview:
+                # Redden selection preview
+                bmp = wx.Bitmap.FromRGBA(
+                    width=self.select_preview.w,
+                    height=self.select_preview.h,
+                    red=255,
+                    green=0,
+                    blue=0,
+                    alpha=100,
+                )
+
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=self.bmp_position.x + self.select_preview.x,
+                    y=self.bmp_position.y + self.select_preview.y,
+                    w=self.select_preview.w,
+                    h=self.select_preview.h,
+                )
+
+            # Darken everywhere except selection zone
+            top_left = Point(
+                x=self.bmp_position.x + self.select.x, 
+                y=self.bmp_position.y + self.select.y
+            )
+            top_right = Point(
+                x=self.bmp_position.x + self.select.x + self.select.w, 
+                y=self.bmp_position.y + self.select.y
+            )
+            bottom_left = Point(
+                x=self.bmp_position.x + self.select.x, 
+                y=self.bmp_position.y + self.select.y + self.select.h
+            )
+            bottom_right = Point(
+                x=self.bmp_position.x + self.select.x + self.select.w, 
+                y=self.bmp_position.y + self.select.y + self.select.h
+            )
 
             if top_left.x < w and top_left.y > 0:
                 bmp = wx.Bitmap.FromRGBA(
@@ -295,7 +332,9 @@ class Canvas(wx.Panel):
         self.left_down.Set(x=x, y=y)
 
         if self.state == State.SELECT:
-            pass
+            self.select.Set(*self.FindSelectionZone(x, y))
+
+            self.Refresh()
 
         elif self.state == State.MOVE:
             local_position = Point(
@@ -358,6 +397,12 @@ class Canvas(wx.Panel):
         the hitbox is drawn.
         If the middle button is held down, the canvas is panned.
         """
+        if self.state == State.SELECT:
+            x, y = event.GetPosition()
+            self.select_preview.Set(*self.FindSelectionZone(x, y))
+
+            self.Refresh()
+
         if event.LeftIsDown() and self.hitbox_select is not None:
             x, y = event.GetPosition()
 
@@ -410,12 +455,6 @@ class Canvas(wx.Panel):
             self.bmp_position.y += dy
 
             self.middle_down.Set(x, y)
-
-            self.Refresh()
-
-        elif self.state == State.SELECT:
-            x, y = event.GetPosition()
-            self.select.Set(*self.FindSelectionZone(x, y))
 
             self.Refresh()
 
