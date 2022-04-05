@@ -53,24 +53,28 @@ class Canvas(wx.Panel):
 
         If no selection zone is found, `None` is returned.
         """
+        x = (x - self.bmp_position.x) // self.magnify_factor
+        y = (y - self.bmp_position.y) // self.magnify_factor
+        w, h = self.bmp.GetSize()
+
         vrulers = np.arange(
-            self.bmp_position.x, 
-            self.bmp_position.x + self.bmp_position.w + 1, 
-            int(self.bmp_position.w // self.cols)
+            start=0, 
+            stop=w + 1, 
+            step=int(w // self.cols),
         )
         hrulers = np.arange(
-            self.bmp_position.y, 
-            self.bmp_position.y + self.bmp_position.h + 1, 
-            int(self.bmp_position.h // self.rows)
+            start=0,
+            stop=h + 1, 
+            step=int(h // self.rows)
         )
 
         x_in = np.logical_and(vrulers[:-1] <= x, x < vrulers[1:])
         y_in = np.logical_and(hrulers[:-1] <= y, y < hrulers[1:])
 
-        rect_x = max(0, np.sum(x_in * vrulers[:-1]) - self.bmp_position.x)
-        rect_y = max(0, np.sum(y_in * hrulers[:-1]) - self.bmp_position.y)
-        rect_w = max(0, np.sum(x_in * vrulers[1:]) - rect_x - self.bmp_position.x)
-        rect_h = max(0, np.sum(y_in * hrulers[1:]) - rect_y - self.bmp_position.y)
+        rect_x = np.sum(x_in * vrulers[:-1])
+        rect_y = np.sum(y_in * hrulers[:-1])
+        rect_w = np.sum(x_in * vrulers[1:]) - rect_x
+        rect_h = np.sum(y_in * hrulers[1:]) - rect_y
 
         return rect_x, rect_y, rect_w, rect_h
 
@@ -208,8 +212,8 @@ class Canvas(wx.Panel):
             if preview:
                 # Redden selection preview
                 bmp = wx.Bitmap.FromRGBA(
-                    width=self.select_preview.w,
-                    height=self.select_preview.h,
+                    width=self.select_preview.w * self.magnify_factor,
+                    height=self.select_preview.h * self.magnify_factor,
                     red=255,
                     green=0,
                     blue=0,
@@ -218,28 +222,28 @@ class Canvas(wx.Panel):
 
                 gc.DrawBitmap(
                     bmp=bmp,
-                    x=self.bmp_position.x + self.select_preview.x,
-                    y=self.bmp_position.y + self.select_preview.y,
-                    w=self.select_preview.w,
-                    h=self.select_preview.h,
+                    x=self.bmp_position.x + self.select_preview.x * self.magnify_factor,
+                    y=self.bmp_position.y + self.select_preview.y * self.magnify_factor,
+                    w=self.select_preview.w * self.magnify_factor,
+                    h=self.select_preview.h * self.magnify_factor,
                 )
 
             # Darken everywhere except selection zone
             top_left = Point(
-                x=self.bmp_position.x + self.select.x, 
-                y=self.bmp_position.y + self.select.y
+                x=self.bmp_position.x + self.select.x * self.magnify_factor, 
+                y=self.bmp_position.y + self.select.y * self.magnify_factor,
             )
             top_right = Point(
-                x=self.bmp_position.x + self.select.x + self.select.w, 
-                y=self.bmp_position.y + self.select.y
+                x=self.bmp_position.x + (self.select.x + self.select.w) * self.magnify_factor, 
+                y=self.bmp_position.y + self.select.y * self.magnify_factor,
             )
             bottom_left = Point(
-                x=self.bmp_position.x + self.select.x, 
-                y=self.bmp_position.y + self.select.y + self.select.h
+                x=self.bmp_position.x + self.select.x * self.magnify_factor, 
+                y=self.bmp_position.y + (self.select.y + self.select.h) * self.magnify_factor,
             )
             bottom_right = Point(
-                x=self.bmp_position.x + self.select.x + self.select.w, 
-                y=self.bmp_position.y + self.select.y + self.select.h
+                x=self.bmp_position.x + (self.select.x + self.select.w) * self.magnify_factor, 
+                y=self.bmp_position.y + (self.select.y + self.select.h) * self.magnify_factor,
             )
 
             if top_left.x < w and top_left.y > 0:
