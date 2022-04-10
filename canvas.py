@@ -356,17 +356,26 @@ class Canvas(wx.Panel):
             self.Refresh()
 
         elif self.state == State.MOVE and self.select is not None:
-            local_position = Point(
-                x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
-                y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
-            )
-
             # Scale selected hitbox
             if self.hitbox_select is not None:
-                self.scale_select = self.scale_rects.SelectScale(self.left_down)
+                local_position = Point(
+                    x=self.left_down.x - self.bmp_position.x,
+                    y=self.left_down.y - self.bmp_position.y,
+                )
+
+                self.scale_select = self.scale_rects.SelectScale(local_position)
+                self.hitbox_buffer.Set(
+                    x=self.left_down.x, 
+                    y=self.left_down.y
+                )
 
             # Find a hitbox in the mouse position
             if self.scale_select is None:
+                local_position = Point(
+                    x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
+                    y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
+                )
+
                 for label, hitbox in self.sprites[self.select].hitboxes.items():
                     if hitbox.Contains(local_position):
                         self.hitbox_buffer.Set(x=hitbox.x, y=hitbox.y)
@@ -432,10 +441,14 @@ class Canvas(wx.Panel):
 
             if self.state == State.MOVE:
                 if self.scale_select is not None:
-                    dx = (x - self.left_down_buffer.x) // self.magnify_factor
-                    dy = (y - self.left_down_buffer.y) // self.magnify_factor
+                    dx = (x - self.hitbox_buffer.x) // self.magnify_factor
+                    dy = (y - self.hitbox_buffer.y) // self.magnify_factor
 
-                    self.left_down_buffer.Set(x=x, y=y)
+                    if dx != 0:
+                        self.hitbox_buffer.x = x
+                    
+                    if dy != 0:
+                        self.hitbox_buffer.y = y
 
                     hitbox.Scale(
                         scale=self.scale_select,
