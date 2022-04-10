@@ -58,8 +58,8 @@ class Canvas(wx.Panel):
         data = {
             sprite.label: {
                 hitbox.label: {
-                    "x": hitbox.x,
-                    "y": hitbox.y,
+                    "x": hitbox.x - self.select_position.x,
+                    "y": hitbox.y - self.select_position.y,
                     "w": hitbox.w,
                     "h": hitbox.h,
                 }
@@ -120,8 +120,48 @@ class Canvas(wx.Panel):
         self.bmp_loaded = True
 
     def LoadPXT(self, filepath):
-        """Loads data from a PXT file."""
-        pass
+        """Loads data from a PXT file into the current canvas."""
+        temp_dir = filepath + ".temp"
+        canvas_filepath = os.path.join(temp_dir, "canvas.bmp")
+        data_filepath = os.path.join(temp_dir, "data.json")
+
+        # Decompress data into a temporary directory
+        shutil.unpack_archive(
+            filename=filepath,
+            extract_dir=temp_dir,
+            format="gztar",
+        )
+
+        with open(data_filepath, "r") as file:
+            data = json.load(file)
+
+        # Load data into the canvas
+        self.LoadImage(canvas_filepath)
+
+        spritesheet_properties = data["spritesheet_properties"]
+        sprite_properties = data["sprite_properties"]
+
+        self.rows = spritesheet_properties["spritesheet_rows"]
+        self.cols = spritesheet_properties["spritesheet_cols"]
+
+        self.sprites = dict()
+
+        for sprite_label, sprite in sprite_properties.items():
+            sprite_key = tuple(sprite["sprite_key"])
+
+            self.sprites[sprite_key] = Sprite(sprite_label)
+
+            for hitbox_key, hitbox in sprite["hitboxes"].items():
+                self.sprites[sprite_key].hitboxes[hitbox_key] = Rect(
+                    x=hitbox["x"],
+                    y=hitbox["y"],
+                    w=hitbox["w"],
+                    h=hitbox["h"],
+                    label=hitbox["label"],
+                )
+
+        # Remove temporary directory
+        shutil.rmtree(temp_dir)
 
     def PaintBMP(self, gc):
         """Paints the loaded image to the canvas."""
@@ -367,8 +407,8 @@ class Canvas(wx.Panel):
         # Construct data storage
         data = {
             "spritesheet_properties": {
-                "spritesheet_rows": self.spritesheet_rows,
-                "spritesheet_cols": self.spritesheet_cols,
+                "spritesheet_rows": self.rows,
+                "spritesheet_cols": self.cols,
             },
         }
 
@@ -376,11 +416,12 @@ class Canvas(wx.Panel):
 
         for sprite_key, sprite in self.sprites.items():
             sprites[sprite.label] = {
-                "sprite_key": sprite_key
+                "sprite_key": sprite_key,
+                "hitboxes": dict()
             }
 
             for hitbox_key, hitbox in sprite.hitboxes.items():
-                sprites[sprite.label][hitbox_key] = {
+                sprites[sprite.label]["hitboxes"][hitbox_key] = {
                     "x": hitbox.x,
                     "y": hitbox.y,
                     "w": hitbox.w,
@@ -414,6 +455,8 @@ class Canvas(wx.Panel):
         # Rename archive and remove temporary directory
         shutil.move(src=archive_filepath, dst=filepath)
         shutil.rmtree(temp_dir)
+
+        self.saved = True
 
     def onLeftDown(self, event):
         """Records the location of the mouse click.

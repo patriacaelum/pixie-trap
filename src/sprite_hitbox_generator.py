@@ -221,28 +221,6 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.tool_bar.Realize()
 
-    def Open(self):
-        """Create and show the `wx.FileDialog` to open an image."""
-        with wx.FileDialog(
-                    parent=self,
-                    message="Select a file to open",
-                    defaultDir=os.getcwd(),
-                    defaultFile="",
-                    wildcard=IMAGE_WILDCARD,
-                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                ) as dialog:
-            if dialog.ShowModal() == wx.ID_CANCEL:
-                return
-
-            self.canvas.LoadImage(dialog.GetPath())
-
-        self.inspector.spritesheet_rows.SetValue(str(1))
-        self.inspector.spritesheet_cols.SetValue(str(1))
-
-        self.inspector.EnableSpritesheetProperties()
-
-        self.Refresh()
-
     def Save(self, show_dialog=False):
         """Show the `wx.FileDialog` if there is no filepath and save the 
         current canvas.
@@ -266,8 +244,6 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.canvas.SavePXT(self.filepath)
 
-        self.canvas.saved = True
-
     def onFileMenuExit(self, event):
         """Asks to save the current canvas and exits the program."""
         if self.ContinueDialog():
@@ -283,7 +259,7 @@ class SpriteHitboxGenerator(wx.Frame):
                     message="Select an image file as a base canvas",
                     defaultDir=os.getcwd(),
                     defaultFile="",
-                    wildvard=IMAGE_WILDCARD,
+                    wildcard=IMAGE_WILDCARD,
                     style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
                 ) as dialog:
             if dialog.ShowModal() == wx.ID_CANCEL:
@@ -293,6 +269,8 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.inspector.spritesheet_rows.SetValue(str(1))
         self.inspector.spritesheet_cols.SetValue(str(1))
+
+        self.inspector.EnableSpritesheetProperties()
 
         self.Refresh()
 
@@ -312,7 +290,15 @@ class SpriteHitboxGenerator(wx.Frame):
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
-            self.canvas.Load(dialog.GetPath())
+            self.canvas.LoadPXT(dialog.GetPath())
+
+        rows = self.canvas.rows
+        cols = self.canvas.cols
+
+        self.inspector.spritesheet_rows.SetValue(str(rows))
+        self.inspector.spritesheet_cols.SetValue(str(cols))
+
+        self.inspector.EnableSpritesheetProperties()
 
         self.Refresh()
 
@@ -403,6 +389,10 @@ class SpriteHitboxGenerator(wx.Frame):
         self.canvas.state = State.DRAW
         self.canvas.hitbox_select = None
 
+        self.inspector.DisableSpritesheetProperties()
+        self.inspector.DisableSpriteProperties()
+        self.inspector.DisableHitboxProperties()
+
         self.tool_bar.ToggleTool(self.tool_select.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), True)
         self.tool_bar.ToggleTool(self.tool_move.GetId(), False)
@@ -414,6 +404,10 @@ class SpriteHitboxGenerator(wx.Frame):
         self.canvas.state = State.MOVE
         self.canvas.hitbox_select = None
 
+        self.inspector.DisableSpritesheetProperties()
+        self.inspector.EnableSpriteProperties()
+        self.inspector.EnableHitboxProperties()
+
         self.tool_bar.ToggleTool(self.tool_select.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_move.GetId(), True)
@@ -424,6 +418,10 @@ class SpriteHitboxGenerator(wx.Frame):
         """Toggles the select tool on."""
         self.canvas.state = State.SELECT
         self.canvas.hitbox_select = None
+
+        self.inspector.EnableSpritesheetProperties()
+        self.inspector.EnableSpriteProperties()
+        self.inspector.DisableHitboxProperties()
 
         self.tool_bar.ToggleTool(self.tool_select.GetId(), True)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
