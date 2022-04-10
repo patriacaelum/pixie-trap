@@ -13,6 +13,7 @@ CENTER_RIGHT = wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL
 
 
 UpdateInspectorHitboxEvent, EVT_UPDATE_INSPECTOR_HITBOX = NewEvent()
+UpdateInspectorSpriteEvent, EVT_UPDATE_INSPECTOR_SPRITE = NewEvent()
 
 
 class State(enum.Enum):

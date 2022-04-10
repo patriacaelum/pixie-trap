@@ -82,6 +82,13 @@ class Rect:
         return f"x={self.x}, y={self.y}, w={self.w}, h={self.h}"
 
 
+class Sprite:
+    def __init__(self, label):
+        self.label = label
+
+        self.hitboxes = dict()
+
+
 class ScaleRects:
     def __init__(
                 self, 

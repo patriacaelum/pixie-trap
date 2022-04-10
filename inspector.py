@@ -56,8 +56,8 @@ class Inspector(wx.Panel):
         self.sprite_label_label.Disable()
         self.sprite_label.Disable()
 
-        self.Enable_hitboxes_label.Disable()
-        self.Enable_hitboxes.Disable()
+        self.isolate_hitboxes_label.Disable()
+        self.isolate_hitboxes.Disable()
 
     def DisableSpritesheetProperties(self):
         self.spritesheet_line_label.Disable()
@@ -113,8 +113,8 @@ class Inspector(wx.Panel):
         self.sprite_label_label.Enable()
         self.sprite_label.Enable()
 
-        self.Enable_hitboxes_label.Enable()
-        self.Enable_hitboxes.Enable()
+        self.isolate_hitboxes_label.Enable()
+        self.isolate_hitboxes.Enable()
 
     def EnableSpritesheetProperties(self):
         self.spritesheet_line_label.Enable()
@@ -179,8 +179,8 @@ class Inspector(wx.Panel):
         self.sprite_label_label = wx.StaticText(parent=self, label="Label")
         self.sprite_label = wx.TextCtrl(parent=self, size=(180, -1))
 
-        self.Enable_hitboxes_label = wx.StaticText(parent=self, label="Isolate")
-        self.Enable_hitboxes = wx.CheckBox(parent=self, label="Enable All")
+        self.isolate_hitboxes_label = wx.StaticText(parent=self, label="Isolate")
+        self.isolate_hitboxes = wx.CheckBox(parent=self, label="Enable")
 
     def InitSpritesheetProperties(self):
         self.spritesheet_line_label = wx.StaticLine(parent=self)
@@ -230,8 +230,8 @@ class Inspector(wx.Panel):
         sizer.Add(window=self.sprite_header_blank, flag=EXPAND)
         sizer.Add(window=self.sprite_label_label, flag=CENTER_RIGHT)
         sizer.Add(window=self.sprite_label, flag=EXPAND)
-        sizer.Add(window=self.Enable_hitboxes_label, flag=CENTER_RIGHT)
-        sizer.Add(window=self.Enable_hitboxes, flag=wx.ALIGN_RIGHT)
+        sizer.Add(window=self.isolate_hitboxes_label, flag=CENTER_RIGHT)
+        sizer.Add(window=self.isolate_hitboxes, flag=wx.ALIGN_RIGHT)
 
         #####################
         # Hitbox Properties #

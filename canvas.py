@@ -2,8 +2,8 @@ import numpy as np
 import wx
 
 from constants import State
-from constants import UpdateInspectorHitboxEvent
-from primitives import Point, Rect, ScaleRects
+from constants import UpdateInspectorHitboxEvent, UpdateInspectorSpriteEvent
+from primitives import Point, Rect, Sprite, ScaleRects
 
 
 class Canvas(wx.Panel):
@@ -11,8 +11,9 @@ class Canvas(wx.Panel):
         super().__init__(parent=parent)
 
         self.bmp_loaded = False
-        self.state = State.MOVE
+        self.isolate = False
         self.saved = True
+        self.state = State.MOVE
 
         self.magnify = 1
         self.magnify_factor = 1
@@ -25,10 +26,11 @@ class Canvas(wx.Panel):
         self.rows = 1
         self.cols = 1
 
-        self.select = Rect()
+        self.select = None
+        self.select_position = Rect()
         self.select_preview = Rect()
 
-        self.hitboxes = dict()
+        self.sprites = dict()
         self.n_hitboxes_created = 0
         self.hitbox_buffer = Point()
         self.hitbox_colour = wx.Colour(255, 50, 0, 50)
@@ -95,36 +97,42 @@ class Canvas(wx.Panel):
 
     def PaintBMP(self, gc):
         """Paints the loaded image to the canvas."""
+        w, h = self.bmp.GetSize()
+
         gc.DrawBitmap(
             bmp=self.bmp,
             x=self.bmp_position.x,
             y=self.bmp_position.y,
-            w=self.bmp_position.w,
-            h=self.bmp_position.h,
+            w=w * self.magnify_factor,
+            h=h * self.magnify_factor,
         )
 
     def PaintHitboxes(self, gc):
         """Paints the drawn hitboxes to the canvas."""
-        for hitbox in self.hitboxes.values():
-            if hitbox.w <= 0 or hitbox.h <= 0:
+        for sprite_label, sprite in self.sprites.items():
+            if self.isolate and sprite_label != self.select:
                 continue
 
-            bmp = wx.Bitmap.FromRGBA(
-                width=hitbox.w,
-                height=hitbox.h,
-                red=self.hitbox_colour.red,
-                green=self.hitbox_colour.green,
-                blue=self.hitbox_colour.blue,
-                alpha=self.hitbox_colour.alpha,
-            )
+            for hitbox in sprite.hitboxes.values():
+                if hitbox.w <= 0 or hitbox.h <= 0:
+                    continue
 
-            gc.DrawBitmap(
-                bmp=bmp,
-                x=int(self.bmp_position.x + hitbox.x * self.magnify_factor),
-                y=int(self.bmp_position.y + hitbox.y * self.magnify_factor),
-                w=int(hitbox.w * self.magnify_factor),
-                h=int(hitbox.h * self.magnify_factor),
-            )
+                bmp = wx.Bitmap.FromRGBA(
+                    width=hitbox.w,
+                    height=hitbox.h,
+                    red=self.hitbox_colour.red,
+                    green=self.hitbox_colour.green,
+                    blue=self.hitbox_colour.blue,
+                    alpha=self.hitbox_colour.alpha,
+                )
+
+                gc.DrawBitmap(
+                    bmp=bmp,
+                    x=int(self.bmp_position.x + hitbox.x * self.magnify_factor),
+                    y=int(self.bmp_position.y + hitbox.y * self.magnify_factor),
+                    w=int(hitbox.w * self.magnify_factor),
+                    h=int(hitbox.h * self.magnify_factor),
+                )
 
     def PaintRulers(self, dc):
         """Paints the rulers on the canvas."""
@@ -135,28 +143,26 @@ class Canvas(wx.Panel):
 
         canvas_width, canvas_height = self.GetSize()
 
-        position = self.bmp_position
-
-        vspace = int(position.h // self.rows)
-        hspace = int(position.w // self.cols)
+        vspace = int(self.bmp_position.h // self.rows)
+        hspace = int(self.bmp_position.w // self.cols)
 
         dc.DrawLineList([
-            (0, position.y + y, canvas_width, position.y + y)
-            for y in range(0, position.h + 1, vspace)
+            (0, self.bmp_position.y + y, canvas_width, self.bmp_position.y + y)
+            for y in range(0, self.bmp_position.h + 1, vspace)
         ])
 
         dc.DrawLineList([
-            (position.x + x, 0, position.x + x, canvas_height)
-            for x in range(0, position.w + 1, hspace)
+            (self.bmp_position.x + x, 0, self.bmp_position.x + x, canvas_height)
+            for x in range(0, self.bmp_position.w + 1, hspace)
         ])
 
     def PaintScale(self, gc):
         """Paints the transformation scaling pins on the selected hitbox."""
         gc.SetPen(wx.Pen(
             colour=wx.Colour(0, 0, 0, 100),
-            width=2)
-        )
-        hitbox = self.hitboxes[self.hitbox_select]
+            width=2
+        ))
+        hitbox = self.sprites[self.select].hitboxes[self.hitbox_select]
 
         gc.DrawEllipse(
             x=int(self.bmp_position.x + hitbox.centre.x * self.magnify_factor - self.scale_radius),
@@ -186,10 +192,7 @@ class Canvas(wx.Panel):
         """
         w, h = self.GetSize()
 
-        select = (self.select.w > 0 and self.select.h > 0)
-        preview = (self.select_preview.w > 0 and self.select_preview.h > 0)
-
-        if not select and not preview:
+        if not self.select:
             # Darken entire canvas
             bmp = wx.Bitmap.FromRGBA(
                 width=w,
@@ -209,41 +212,22 @@ class Canvas(wx.Panel):
             )
 
         else:
-            if preview:
-                # Redden selection preview
-                bmp = wx.Bitmap.FromRGBA(
-                    width=self.select_preview.w * self.magnify_factor,
-                    height=self.select_preview.h * self.magnify_factor,
-                    red=255,
-                    green=0,
-                    blue=0,
-                    alpha=100,
-                )
-
-                gc.DrawBitmap(
-                    bmp=bmp,
-                    x=self.bmp_position.x + self.select_preview.x * self.magnify_factor,
-                    y=self.bmp_position.y + self.select_preview.y * self.magnify_factor,
-                    w=self.select_preview.w * self.magnify_factor,
-                    h=self.select_preview.h * self.magnify_factor,
-                )
-
             # Darken everywhere except selection zone
             top_left = Point(
-                x=self.bmp_position.x + self.select.x * self.magnify_factor, 
-                y=self.bmp_position.y + self.select.y * self.magnify_factor,
+                x=self.bmp_position.x + self.select_position.x * self.magnify_factor, 
+                y=self.bmp_position.y + self.select_position.y * self.magnify_factor,
             )
             top_right = Point(
-                x=self.bmp_position.x + (self.select.x + self.select.w) * self.magnify_factor, 
-                y=self.bmp_position.y + self.select.y * self.magnify_factor,
+                x=self.bmp_position.x + (self.select_position.x + self.select_position.w) * self.magnify_factor, 
+                y=self.bmp_position.y + self.select_position.y * self.magnify_factor,
             )
             bottom_left = Point(
-                x=self.bmp_position.x + self.select.x * self.magnify_factor, 
-                y=self.bmp_position.y + (self.select.y + self.select.h) * self.magnify_factor,
+                x=self.bmp_position.x + self.select_position.x * self.magnify_factor, 
+                y=self.bmp_position.y + (self.select_position.y + self.select_position.h) * self.magnify_factor,
             )
             bottom_right = Point(
-                x=self.bmp_position.x + (self.select.x + self.select.w) * self.magnify_factor, 
-                y=self.bmp_position.y + (self.select.y + self.select.h) * self.magnify_factor,
+                x=self.bmp_position.x + (self.select_position.x + self.select_position.w) * self.magnify_factor, 
+                y=self.bmp_position.y + (self.select_position.y + self.select_position.h) * self.magnify_factor,
             )
 
             if top_left.x < w and top_left.y > 0:
@@ -318,6 +302,25 @@ class Canvas(wx.Panel):
                     h=h - bottom_right.y,
                 )
 
+        if self.select_preview.w > 0 and self.select_preview.h > 0:
+            # Redden selection preview
+            bmp = wx.Bitmap.FromRGBA(
+                width=self.select_preview.w * self.magnify_factor,
+                height=self.select_preview.h * self.magnify_factor,
+                red=255,
+                green=0,
+                blue=0,
+                alpha=100,
+            )
+
+            gc.DrawBitmap(
+                bmp=bmp,
+                x=self.bmp_position.x + self.select_preview.x * self.magnify_factor,
+                y=self.bmp_position.y + self.select_preview.y * self.magnify_factor,
+                w=self.select_preview.w * self.magnify_factor,
+                h=self.select_preview.h * self.magnify_factor,
+            )
+
     def Save(self, path):
         try:
             with open(path, "w") as file:
@@ -336,11 +339,23 @@ class Canvas(wx.Panel):
         self.left_down.Set(x=x, y=y)
 
         if self.state == State.SELECT:
-            self.select.Set(*self.FindSelectionZone(x, y))
+            self.select_position.Set(*self.FindSelectionZone(x, y))
+
+            if self.select_position.w == 0 and self.select_position.h == 0:
+                self.select = None
+            else:
+                self.select = (self.select_position.x, self.select_position.y)
+
+                if self.sprites.get(self.select) is None:
+                    self.sprites[self.select] = Sprite(
+                        label=f"x{self.select_position.x}_y{self.select_position.y}"
+                    )
+
+            wx.PostEvent(self.Parent, UpdateInspectorSpriteEvent())
 
             self.Refresh()
 
-        elif self.state == State.MOVE:
+        elif self.state == State.MOVE and self.select is not None:
             local_position = Point(
                 x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
                 y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
@@ -352,7 +367,7 @@ class Canvas(wx.Panel):
 
             # Find a hitbox in the mouse position
             if self.scale_select is None:
-                for label, hitbox in self.hitboxes.items():
+                for label, hitbox in self.sprites[self.select].hitboxes.items():
                     if hitbox.Contains(local_position):
                         self.hitbox_buffer.Set(x=hitbox.x, y=hitbox.y)
                         self.hitbox_select = label
@@ -363,9 +378,11 @@ class Canvas(wx.Panel):
 
             self.Refresh()
 
-        elif self.state == State.DRAW:
+        elif self.state == State.DRAW and self.select:
+            sprite = (self.select_position.x, self.select_position.y)
+
             self.hitbox_select = self.n_hitboxes_created
-            self.hitboxes[self.hitbox_select] = Rect(
+            self.sprites[sprite].hitboxes[self.hitbox_select] = Rect(
                 x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
                 y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
                 w=0,
@@ -381,10 +398,11 @@ class Canvas(wx.Panel):
             pass
 
         elif self.state == State.DRAW and self.hitbox_select is not None:
-            hitbox = self.hitboxes[self.hitbox_select]
+            hitboxes = self.sprites[self.select].hitboxes
+            hitbox = hitboxes[self.hitbox_select]
 
             if hitbox.w <= 0 or hitbox.h <= 0:
-                del self.hitboxes[self.hitbox_select]
+                del hitboxes[self.hitbox_select]
 
             self.hitbox_select = None
 
@@ -410,7 +428,7 @@ class Canvas(wx.Panel):
         if event.LeftIsDown() and self.hitbox_select is not None:
             x, y = event.GetPosition()
 
-            hitbox = self.hitboxes[self.hitbox_select]
+            hitbox = self.sprites[self.select].hitboxes[self.hitbox_select]
 
             if self.state == State.MOVE:
                 if self.scale_select is not None:
@@ -428,8 +446,6 @@ class Canvas(wx.Panel):
                 else:
                     dx = (x - self.left_down.x) // self.magnify_factor
                     dy = (y - self.left_down.y) // self.magnify_factor
-
-                    print(x, self.left_down.x, dx)
 
                     hitbox.x = self.hitbox_buffer.x + dx
                     hitbox.y = self.hitbox_buffer.y + dy
@@ -502,7 +518,7 @@ class Canvas(wx.Panel):
             self.PaintBMP(gc)
             self.PaintRulers(dc)
 
-        if self.state == State.SELECT or (self.select.w != 0 and self.select.h != 0):
+        if self.state == State.SELECT or self.select is not None:
             self.PaintSelect(gc)
 
         self.PaintHitboxes(gc)

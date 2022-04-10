@@ -5,7 +5,7 @@ from canvas import Canvas
 from constants import State
 from constants import EXPAND
 from constants import IMAGE_WILDCARD, JSON_WILDCARD
-from constants import EVT_UPDATE_INSPECTOR_HITBOX
+from constants import EVT_UPDATE_INSPECTOR_HITBOX, EVT_UPDATE_INSPECTOR_SPRITE
 from inspector import Inspector
 
 
@@ -61,13 +61,18 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Bind(wx.EVT_TEXT, self.onSpritesheetProperties, id=self.inspector.spritesheet_rows.GetId())
         self.Bind(wx.EVT_TEXT, self.onSpritesheetProperties, id=self.inspector.spritesheet_cols.GetId())
+        self.Bind(wx.EVT_TEXT, self.onSpriteProperties, id=self.inspector.sprite_label.GetId())
 
         self.Bind(wx.EVT_TEXT_ENTER, self.onSpritesheetProperties, id=self.inspector.spritesheet_rows.GetId())
         self.Bind(wx.EVT_TEXT_ENTER, self.onSpritesheetProperties, id=self.inspector.spritesheet_cols.GetId())
+        self.Bind(wx.EVT_TEXT_ENTER, self.onSpriteProperties, id=self.inspector.sprite_label.GetId())
+
+        self.Bind(wx.EVT_CHECKBOX, self.onIsolateHitboxes, id=self.inspector.isolate_hitboxes.GetId())
 
         self.Bind(wx.EVT_SLIDER, self.onTransparency, id=self.inspector.transparency.GetId())
 
         self.Bind(EVT_UPDATE_INSPECTOR_HITBOX, self.onHitboxSelected)
+        self.Bind(EVT_UPDATE_INSPECTOR_SPRITE, self.onSpriteSelected)
 
         self.inspector.DisableHitboxProperties()
         self.inspector.DisableSpriteProperties()
@@ -240,23 +245,46 @@ class SpriteHitboxGenerator(wx.Frame):
 
     def onHitboxSelected(self, event):
         """Updates the hitbox properties in the inspector."""
-        hitbox = self.canvas.hitboxes[self.canvas.hitbox_select]
-        canvas = self.canvas.bmp_position
+        hitbox = self.canvas.sprites[self.canvas.select].hitboxes[self.canvas.hitbox_select]
+        select = self.canvas.select_position
 
         self.inspector.hitbox_label.SetValue(hitbox.label)
-        self.inspector.hitbox_global_x.SetValue(str(hitbox.x - canvas.x))
-        self.inspector.hitbox_global_y.SetValue(str(hitbox.y - canvas.y))
-        self.inspector.hitbox_local_x.SetValue(str(hitbox.x - canvas.x))
-        self.inspector.hitbox_local_y.SetValue(str(hitbox.y - canvas.y))
+        self.inspector.hitbox_global_x.SetValue(str(hitbox.x))
+        self.inspector.hitbox_global_y.SetValue(str(hitbox.y))
+        self.inspector.hitbox_local_x.SetValue(str(hitbox.x - select.x))
+        self.inspector.hitbox_local_y.SetValue(str(hitbox.y - select.y))
         self.inspector.hitbox_width.SetValue(str(hitbox.w))
         self.inspector.hitbox_height.SetValue(str(hitbox.h))
 
         self.inspector.EnableHitboxProperties()
 
+    def onIsolateHitboxes(self, event):
+        """Updates the displayed hitboxes on the canvas."""
+        self.canvas.isolate = self.inspector.isolate_hitboxes.GetValue()
+
+        self.Refresh()
+
+    def onSpriteProperties(self, event):
+        """Updates the canvas sprite from the inspector."""
+        self.canvas.sprites[self.canvas.select].label = self.inspector.sprite_label.GetValue()
+
+    def onSpriteSelected(self, event):
+        """Updates the sprite properties in the inspector."""
+        select = self.canvas.select
+
+        if select is None:
+            self.inspector.DisableSpriteProperties()
+        else:
+            self.inspector.sprite_label.SetValue(self.canvas.sprites[select].label)
+
+            self.inspector.EnableSpriteProperties()
+
     def onSpritesheetProperties(self, event):
-        """Updates the canvas rulers."""
+        """Updates the canvas rulers from the inspector."""
         self.canvas.rows = int(self.inspector.spritesheet_rows.GetValue())
         self.canvas.cols = int(self.inspector.spritesheet_cols.GetValue())
+
+        self.Refresh()
 
     def onToolColourPicker(self, event):
         """Opens the colour dialog and sets the draw colour."""
