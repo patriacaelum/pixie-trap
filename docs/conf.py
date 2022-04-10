@@ -13,12 +13,12 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(".."))
-sys.path.insert(0, os.path.abspath("../src"))
+sys.path.insert(0, os.path.abspath("../pixie_trap"))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Sprite Hitbox Generator'
+project = 'Pixie Trap'
 copyright = '2022, Austin Nhung'
 author = 'Austin Nhung'
 

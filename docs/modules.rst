@@ -1,7 +1,7 @@
-sprite-hitbox-generator
-=======================
+pixie-trap
+==========
 
 .. toctree::
    :maxdepth: 4
 
-   src
+   pixie_trap

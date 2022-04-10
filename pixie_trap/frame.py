@@ -9,7 +9,7 @@ from constants import EVT_UPDATE_INSPECTOR_HITBOX, EVT_UPDATE_INSPECTOR_SPRITE
 from inspector import Inspector
 
 
-class SpriteHitboxGenerator(wx.Frame):
+class Frame(wx.Frame):
     def __init__(self, parent=None):
         super().__init__(
             parent=parent,
