@@ -264,7 +264,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.filepath = filepath
 
-        self.canvas.Save(self.filepath)
+        self.canvas.SavePXT(self.filepath)
 
         self.canvas.saved = True
 
@@ -275,13 +275,46 @@ class SpriteHitboxGenerator(wx.Frame):
 
     def onFileMenuNew(self, event):
         """Asks to save the current canvas and opens a new file."""
-        if self.ContinueDialog():
-            self.Open()
+        if not self.ContinueDialog():
+            return
+
+        with wx.FileDialog(
+                    parent=self,
+                    message="Select an image file as a base canvas",
+                    defaultDir=os.getcwd(),
+                    defaultFile="",
+                    wildvard=IMAGE_WILDCARD,
+                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            self.canvas.LoadImage(dialog.GetPath())
+
+        self.inspector.spritesheet_rows.SetValue(str(1))
+        self.inspector.spritesheet_cols.SetValue(str(1))
+
+        self.Refresh()
 
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
-        if self.ContinueDialog():
-            self.Open()
+        if not self.ContinueDialog():
+            return
+
+        with wx.FileDialog(
+                    parent=self,
+                    message="Select a file to open",
+                    defaultDir=os.getcwd(),
+                    defaultFile="",
+                    wildcard=PXT_WILDCARD,
+                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+                ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            self.canvas.Load(dialog.GetPath())
+
+        self.Refresh()
 
     def onFileMenuSave(self, event):
         """Save the current canvas."""
@@ -304,7 +337,7 @@ class SpriteHitboxGenerator(wx.Frame):
 
             filepath = dialog.GetPath()
 
-        self.canvas.Export(filepath)
+        self.canvas.ExportJSON(filepath)
 
     def onHitboxSelected(self, event):
         """Updates the hitbox properties in the inspector."""

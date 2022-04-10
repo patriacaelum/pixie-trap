@@ -53,7 +53,7 @@ class Canvas(wx.Panel):
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
-    def Export(self, filepath):
+    def ExportJSON(self, filepath):
         """Exports the current canvas as JSON to disk."""
         data = {
             sprite.label: {
@@ -118,6 +118,10 @@ class Canvas(wx.Panel):
         self.magnify_factor = 1
 
         self.bmp_loaded = True
+
+    def LoadPXT(self, filepath):
+        """Loads data from a PXT file."""
+        pass
 
     def PaintBMP(self, gc):
         """Paints the loaded image to the canvas."""
@@ -345,7 +349,7 @@ class Canvas(wx.Panel):
                 h=self.select_preview.h * self.magnify_factor,
             )
 
-    def Save(self, filepath):
+    def SavePXT(self, filepath):
         """Saves the current canvas as PXT to disk.
 
         The PXT file format is really just a `.tar.gz` compressed directory
@@ -360,20 +364,31 @@ class Canvas(wx.Panel):
         canvas_filepath = os.path.join(temp_dir, "canvas.bmp")
         data_filepath = os.path.join(temp_dir, "data.json")
 
-        data = dict()
+        # Construct data storage
+        data = {
+            "spritesheet_properties": {
+                "spritesheet_rows": self.spritesheet_rows,
+                "spritesheet_cols": self.spritesheet_cols,
+            },
+        }
+
+        sprites = dict()
+
         for sprite_key, sprite in self.sprites.items():
-            data[sprite.label] = {
+            sprites[sprite.label] = {
                 "sprite_key": sprite_key
             }
 
             for hitbox_key, hitbox in sprite.hitboxes.items():
-                data[sprite.label][hitbox_key] = {
+                sprites[sprite.label][hitbox_key] = {
                     "x": hitbox.x,
                     "y": hitbox.y,
                     "w": hitbox.w,
                     "h": hitbox.h,
                     "label": hitbox.label,
                 }
+
+        data["sprite_properties"] = sprites
 
         # Write all data in temporary directory
         os.mkdir(temp_dir)
