@@ -1,5 +1,5 @@
-src
-===
+sprite-hitbox-generator
+=======================
 
 .. toctree::
    :maxdepth: 4

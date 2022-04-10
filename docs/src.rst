@@ -12,10 +12,18 @@ src.canvas module
    :undoc-members:
    :show-inheritance:
 
-src.enums module
-----------------
+src.constants module
+--------------------
 
-.. automodule:: src.enums
+.. automodule:: src.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+src.inspector module
+--------------------
+
+.. automodule:: src.inspector
    :members:
    :undoc-members:
    :show-inheritance:
