@@ -1,4 +1,7 @@
+import json
 import numpy as np
+import os
+import shutil
 import wx
 
 from constants import State
@@ -49,6 +52,27 @@ class Canvas(wx.Panel):
         self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheel)
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
+
+    def Export(self, filepath):
+        """Exports the current canvas as JSON to disk."""
+        data = {
+            sprite.label: {
+                hitbox.label: {
+                    "x": hitbox.x,
+                    "y": hitbox.y,
+                    "w": hitbox.w,
+                    "h": hitbox.h,
+                }
+                for hitbox in sprite.hitboxes.values()
+            }
+            for sprite in self.sprites.values()
+        }
+
+        try:
+            with open(filepath, "w") as file:
+                json.dump(data, file)
+        except IOError:
+            wx.LogError(f"Failed to save file in {filepath}")
 
     def FindSelectionZone(self, x, y):
         """Finds the selection zone on the canvas.
@@ -321,12 +345,60 @@ class Canvas(wx.Panel):
                 h=self.select_preview.h * self.magnify_factor,
             )
 
-    def Save(self, path):
+    def Save(self, filepath):
+        """Saves the current canvas as PXT to disk.
+
+        The PXT file format is really just a `.tar.gz` compressed directory
+        that contains the canvas image and JSON data of the hitboxes.
+
+        Parameters
+        -----------
+        filepath: str
+            the filepath should have a `.pxt` file extension.
+        """
+        temp_dir = filepath + ".temp"
+        canvas_filepath = os.path.join(temp_dir, "canvas.bmp")
+        data_filepath = os.path.join(temp_dir, "data.json")
+
+        data = dict()
+        for sprite_key, sprite in self.sprites.items():
+            data[sprite.label] = {
+                "sprite_key": sprite_key
+            }
+
+            for hitbox_key, hitbox in sprite.hitboxes.items():
+                data[sprite.label][hitbox_key] = {
+                    "x": hitbox.x,
+                    "y": hitbox.y,
+                    "w": hitbox.w,
+                    "h": hitbox.h,
+                    "label": hitbox.label,
+                }
+
+        # Write all data in temporary directory
+        os.mkdir(temp_dir)
+
+        self.bmp.SaveFile(
+            name=canvas_filepath,
+            type=wx.BITMAP_TYPE_BMP,
+        )
+
         try:
-            with open(path, "w") as file:
-                pass
+            with open(data_filepath, "w") as file:
+                json.dump(data, file)
         except IOError:
-            wx.LogError(f"Failed to save file in {path}")
+            wx.LogError(f"Failed to save file in {filepath}")
+
+        # Compress directory
+        archive_filepath = shutil.make_archive(
+            base_name=filepath, 
+            format="gztar",
+            root_dir=temp_dir,
+        )
+
+        # Rename archive and remove temporary directory
+        shutil.move(src=archive_filepath, dst=filepath)
+        shutil.rmtree(temp_dir)
 
     def onLeftDown(self, event):
         """Records the location of the mouse click.
@@ -403,15 +475,15 @@ class Canvas(wx.Panel):
 
     def onLeftUp(self, event):
         """Records the size of the drawn rectangle and renders it."""
-        if self.state == State.MOVE:
-            pass
-
-        elif self.state == State.DRAW and self.hitbox_select is not None:
+        if self.state == State.DRAW and self.hitbox_select is not None:
             hitboxes = self.sprites[self.select].hitboxes
             hitbox = hitboxes[self.hitbox_select]
 
             if hitbox.w <= 0 or hitbox.h <= 0:
                 del hitboxes[self.hitbox_select]
+
+            else:
+                self.saved = False
 
             self.hitbox_select = None
 
@@ -450,11 +522,17 @@ class Canvas(wx.Panel):
                     if dy != 0:
                         self.hitbox_buffer.y = y
 
-                    hitbox.Scale(
-                        scale=self.scale_select,
-                        dx=dx,
-                        dy=dy,
-                    )
+                    if dx != 0 or dy != 0:
+                        hitbox.Scale(
+                            scale=self.scale_select,
+                            dx=dx,
+                            dy=dy,
+                        )
+
+                        wx.PostEvent(self.Parent, UpdateInspectorHitboxEvent())
+                        self.Refresh()
+
+                        self.saved = False
 
                 else:
                     dx = (x - self.left_down.x) // self.magnify_factor
@@ -463,20 +541,27 @@ class Canvas(wx.Panel):
                     hitbox.x = self.hitbox_buffer.x + dx
                     hitbox.y = self.hitbox_buffer.y + dy
 
-                wx.PostEvent(self.Parent, UpdateInspectorHitboxEvent())
+                    if dx != 0 or dy != 0:
+                        wx.PostEvent(self.Parent, UpdateInspectorHitboxEvent())
+                        self.Refresh()
+
+                        self.saved = False
 
             elif self.state == State.DRAW:
                 dx = x - self.left_down.x
                 dy = y - self.left_down.y
 
-                hitbox.Set(
-                    x=(min(x, self.left_down.x) - self.bmp_position.x) // self.magnify_factor,
-                    y=(min(y, self.left_down.y) - self.bmp_position.y) // self.magnify_factor,
-                    w=abs(dx) // self.magnify_factor,
-                    h=abs(dy) // self.magnify_factor,
-                )
+                if dx != 0 or dy != 0:
+                    hitbox.Set(
+                        x=(min(x, self.left_down.x) - self.bmp_position.x) // self.magnify_factor,
+                        y=(min(y, self.left_down.y) - self.bmp_position.y) // self.magnify_factor,
+                        w=abs(dx) // self.magnify_factor,
+                        h=abs(dy) // self.magnify_factor,
+                    )
 
-            self.Refresh()
+                    self.Refresh()
+
+                    self.saved = False
 
         elif event.MiddleIsDown():
             x, y = event.GetPosition()

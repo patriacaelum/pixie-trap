@@ -4,7 +4,7 @@ import wx
 from canvas import Canvas
 from constants import State
 from constants import EXPAND
-from constants import IMAGE_WILDCARD, JSON_WILDCARD, SHG_WILDCARD
+from constants import IMAGE_WILDCARD, JSON_WILDCARD, PXT_WILDCARD
 from constants import EVT_UPDATE_INSPECTOR_HITBOX, EVT_UPDATE_INSPECTOR_SPRITE
 from inspector import Inspector
 
@@ -251,13 +251,18 @@ class SpriteHitboxGenerator(wx.Frame):
             with wx.FileDialog(
                         parent=self,
                         message="Save current canvas",
-                        wildcard=SHG_WILDCARD,
+                        wildcard=PXT_WILDCARD,
                         style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                     ) as dialog:
                 if dialog.ShowModal() == wx.ID_CANCEL:
                     return
 
-                self.filepath = dialog.GetPath()
+                filepath = dialog.GetPath()
+
+        if os.path.splitext(filepath)[0] == filepath:
+            filepath += ".pxt"
+
+        self.filepath = filepath
 
         self.canvas.Save(self.filepath)
 
@@ -374,6 +379,7 @@ class SpriteHitboxGenerator(wx.Frame):
     def onToolMove(self, event):
         """Toggles the move tool on."""
         self.canvas.state = State.MOVE
+        self.canvas.hitbox_select = None
 
         self.tool_bar.ToggleTool(self.tool_select.GetId(), False)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)
@@ -384,6 +390,7 @@ class SpriteHitboxGenerator(wx.Frame):
     def onToolSelect(self, event):
         """Toggles the select tool on."""
         self.canvas.state = State.SELECT
+        self.canvas.hitbox_select = None
 
         self.tool_bar.ToggleTool(self.tool_select.GetId(), True)
         self.tool_bar.ToggleTool(self.tool_draw.GetId(), False)

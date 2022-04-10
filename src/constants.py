@@ -4,9 +4,9 @@ import wx
 from wx.lib.newevent import NewEvent
 
 
-IMAGE_WILDCARD = "JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
+IMAGE_WILDCARD = "All files (*)|*|BMP files (*.bmp)|*.bmp|JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"
 JSON_WILDCARD = "JSON files (*.json)|*.json"
-SHG_WILDCARD = "SHG files (*.shg)|*.shg"
+PXT_WILDCARD = "PXT files (*.pxt)|*.pxt"
 
 
 EXPAND = wx.ALL | wx.EXPAND
