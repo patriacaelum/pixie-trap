@@ -4,7 +4,7 @@ import wx
 from canvas import Canvas
 from constants import State
 from constants import EXPAND
-from constants import IMAGE_WILDCARD, JSON_WILDCARD
+from constants import IMAGE_WILDCARD, JSON_WILDCARD, SHG_WILDCARD
 from constants import EVT_UPDATE_INSPECTOR_HITBOX, EVT_UPDATE_INSPECTOR_SPRITE
 from inspector import Inspector
 
@@ -17,6 +17,8 @@ class SpriteHitboxGenerator(wx.Frame):
             size=wx.Size(640, 480),
             style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
         )
+
+        self.filepath = None
 
         self.Maximize()
 
@@ -52,6 +54,8 @@ class SpriteHitboxGenerator(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onFileMenuNew, id=self.file_menu_new.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuSaveAs, id=self.file_menu_save_as.GetId())
+        self.Bind(wx.EVT_MENU, self.onFileMenuExportAs, id=self.file_menu_export_as.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
 
         self.Bind(wx.EVT_TOOL, self.onToolSelect, id=self.tool_select.GetId())
@@ -77,6 +81,28 @@ class SpriteHitboxGenerator(wx.Frame):
         self.inspector.DisableHitboxProperties()
         self.inspector.DisableSpriteProperties()
         self.inspector.DisableSpritesheetProperties()
+
+    def ContinueDialog(self):
+        """Checks if the current canvas is saved and if not, asks the user if
+        they want to continue.
+
+        Returns
+        -------
+        bool
+            `True` if the user wants to continue, `False` otherwise.
+        """
+        if not self.canvas.saved:
+            confirm_continue = wx.MessageBox(
+                message="Current file has not been saved. Continue?",
+                caption="Current canvas not saved",
+                style=wx.ICON_QUESTION | wx.YES_NO,
+                parent=self
+            )
+
+            if confirm_continue == wx.YES:
+                return True
+
+        return False
 
     def InitFileMenu(self):
         self.file_menu = wx.Menu()
@@ -118,6 +144,22 @@ class SpriteHitboxGenerator(wx.Frame):
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_save)
+
+        self.file_menu_save_as = wx.MenuItem(
+            parentMenu=self.file_menu,
+            id=wx.ID_ANY,
+            text="Save As...\tCTRL+SHIFT+S",
+            kind=wx.ITEM_NORMAL,
+        )
+        self.file_menu.Append(self.file_menu_save_as)
+
+        self.file_menu_export_as = wx.MenuItem(
+            parentMenu=self.file_menu,
+            id=wx.ID_ANY,
+            text="Export As...\tCTRL+SHIFT+E",
+            kind=wx.ITEM_NORMAL,
+        )
+        self.file_menu.Append(self.file_menu_export_as)
 
         self.file_menu.AppendSeparator()
 
@@ -201,47 +243,63 @@ class SpriteHitboxGenerator(wx.Frame):
 
         self.Refresh()
 
-    def Save(self):
-        """Create and show the `wx.FileDialog` to save the current canvas."""
-        with wx.FileDialog(
-                    parent=self,
-                    message="Save hitbox data",
-                    wildcard=JSON_WILDCARD,
-                    style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
-                ) as dialog:
-            if dialog.ShowModal() == wx.ID_CANCEL:
-                return
+    def Save(self, show_dialog=False):
+        """Show the `wx.FileDialog` if there is no filepath and save the 
+        current canvas.
+        """
+        if self.filepath is None or show_dialog:
+            with wx.FileDialog(
+                        parent=self,
+                        message="Save current canvas",
+                        wildcard=SHG_WILDCARD,
+                        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                    ) as dialog:
+                if dialog.ShowModal() == wx.ID_CANCEL:
+                    return
 
-            self.canvas.Save(dialog.GetPath())
+                self.filepath = dialog.GetPath()
+
+        self.canvas.Save(self.filepath)
 
         self.canvas.saved = True
 
     def onFileMenuExit(self, event):
         """Asks to save the current canvas and exits the program."""
-        self.Save()
-        self.Close()
+        if self.ContinueDialog():
+            self.Close()
 
     def onFileMenuNew(self, event):
-        self.Open()
+        """Asks to save the current canvas and opens a new file."""
+        if self.ContinueDialog():
+            self.Open()
 
     def onFileMenuOpen(self, event):
         """Create and show the `wx.FileDialog` to open a file."""
-        if not self.canvas.saved:
-            confirm_continue = wx.MessageBox(
-                message="Current file has not been saved. Continue?",
-                caption="Current canvas not saved",
-                style=wx.ICON_QUESTION | wx.YES_NO,
-                parent=self
-            )
-
-            if confirm_continue == wx.NO:
-                return
-
-        self.Open()
+        if self.ContinueDialog():
+            self.Open()
 
     def onFileMenuSave(self, event):
-        """Create and show the `wx.FileDialog` to save the current canvas."""
+        """Save the current canvas."""
         self.Save()
+
+    def onFileMenuSaveAs(self, event):
+        """Create a new file and save the current canvas."""
+        self.Save(show_dialog=True)
+
+    def onFileMenuExportAs(self, event):
+        """Creates a new file and exports the current canvas."""
+        with wx.FileDialog(
+                    parent=self,
+                    message="Export current canvas",
+                    wildcard=JSON_WILDCARD,
+                    style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+                ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            filepath = dialog.GetPath()
+
+        self.canvas.Export(filepath)
 
     def onHitboxSelected(self, event):
         """Updates the hitbox properties in the inspector."""
