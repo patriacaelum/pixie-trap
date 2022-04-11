@@ -18,7 +18,7 @@ class Canvas(wx.Panel):
         self.bmp_loaded = False
         self.isolate = False
         self.saved = True
-        self.state = State.MOVE
+        self.state = None
 
         self.magnify = 1
         self.magnify_factor = 1
@@ -52,6 +52,8 @@ class Canvas(wx.Panel):
 
         self.Bind(wx.EVT_MOTION, self.onMotion)
         self.Bind(wx.EVT_MOUSEWHEEL, self.onMouseWheel)
+
+        self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
 
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
@@ -459,6 +461,36 @@ class Canvas(wx.Panel):
         shutil.rmtree(temp_dir)
 
         self.saved = True
+
+    def onKeyDown(self, event):
+        """Processes keyboard events.
+        
+        If the `Move` tool is selected, then
+          - the position of the selected hitbox is moved by one pixel in the
+            direction of the arrow key.
+          - the selected hitbox is deleted if the delete key is pressed.
+        """
+        if self.state != State.MOVE and self.hitbox_select is None:
+            return
+
+        key = event.GetKeyCode()
+        hitbox = self.sprites[self.select].hitboxes[self.hitbox_select]
+
+        if key == wx.WXK_DELETE:
+            del self.sprites[self.select].hitboxes[self.hitbox_select]
+
+            self.hitbox_select = None
+
+        elif key == wx.WXK_LEFT:
+            hitbox.x -= 1
+        elif key == wx.WXK_UP:
+            hitbox.y -= 1
+        elif key == wx.WXK_RIGHT:
+            hitbox.x += 1
+        elif key == wx.WXK_DOWN:
+            hitbox.y += 1
+
+        self.Refresh()
 
     def onLeftDown(self, event):
         """Records the location of the mouse click.
