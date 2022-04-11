@@ -21,6 +21,7 @@ class Frame(wx.Frame):
 
         self.filepath = None
 
+        self.SetDoubleBuffered(True)
         self.Maximize()
 
         # Main panel
@@ -389,6 +390,7 @@ class Frame(wx.Frame):
         """Toggles the draw tool on."""
         self.canvas.state = State.DRAW
         self.canvas.hitbox_select = None
+        self.canvas.select_preview.Set(0, 0, 0, 0)
 
         self.inspector.DisableSpritesheetProperties()
         self.inspector.DisableSpriteProperties()
@@ -404,6 +406,7 @@ class Frame(wx.Frame):
         """Toggles the move tool on."""
         self.canvas.state = State.MOVE
         self.canvas.hitbox_select = None
+        self.canvas.select_preview.Set(0, 0, 0, 0)
 
         self.inspector.DisableSpritesheetProperties()
         self.inspector.EnableSpriteProperties()

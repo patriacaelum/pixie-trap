@@ -13,6 +13,8 @@ class Canvas(wx.Panel):
     def __init__(self, parent):
         super().__init__(parent=parent)
 
+        self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+
         self.bmp_loaded = False
         self.isolate = False
         self.saved = True
@@ -667,7 +669,7 @@ class Canvas(wx.Panel):
 
     def onPaintCanvas(self, event):
         """Paints the background image and the hitboxes on the canvas."""
-        dc = wx.PaintDC(self)
+        dc = wx.AutoBufferedPaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
 
         if self.bmp_loaded:
