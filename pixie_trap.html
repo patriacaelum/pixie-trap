@@ -41,12 +41,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">pixie-trap</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">pixie_trap package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pixie-trap-canvas-module">pixie_trap.canvas module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pixie-trap-constants-module">pixie_trap.constants module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pixie-trap-frame-module">pixie_trap.frame module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pixie-trap-inspector-module">pixie_trap.inspector module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pixie-trap-main-module">pixie_trap.main module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pixie-trap-primitives-module">pixie_trap.primitives module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap.canvas">pixie_trap.canvas module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap.constants">pixie_trap.constants module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap.frame">pixie_trap.frame module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap.inspector">pixie_trap.inspector module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap.main">pixie_trap.main module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap.primitives">pixie_trap.primitives module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-pixie_trap">Module contents</a></li>
 </ul>
 </li>
@@ -84,23 +84,520 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
 </section>
-<section id="pixie-trap-canvas-module">
-<h2>pixie_trap.canvas module<a class="headerlink" href="#pixie-trap-canvas-module" title="Permalink to this headline"></a></h2>
+<section id="module-pixie_trap.canvas">
+<span id="pixie-trap-canvas-module"></span><h2>pixie_trap.canvas module<a class="headerlink" href="#module-pixie_trap.canvas" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.canvas.</span></span><span class="sig-name descname"><span class="pre">Canvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">wx._core.Panel</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.ExportJSON">
+<span class="sig-name descname"><span class="pre">ExportJSON</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.ExportJSON" title="Permalink to this definition"></a></dt>
+<dd><p>Exports the current canvas as JSON to disk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.FindSelectionZone">
+<span class="sig-name descname"><span class="pre">FindSelectionZone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.FindSelectionZone" title="Permalink to this definition"></a></dt>
+<dd><p>Finds the selection zone on the canvas.</p>
+<p>If no selection zone is found, <cite>None</cite> is returned.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.LoadImage">
+<span class="sig-name descname"><span class="pre">LoadImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.LoadImage" title="Permalink to this definition"></a></dt>
+<dd><p>Reads and loads an image file to the canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.LoadPXT">
+<span class="sig-name descname"><span class="pre">LoadPXT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.LoadPXT" title="Permalink to this definition"></a></dt>
+<dd><p>Loads data from a PXT file into the current canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.PaintBMP">
+<span class="sig-name descname"><span class="pre">PaintBMP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.PaintBMP" title="Permalink to this definition"></a></dt>
+<dd><p>Paints the loaded image to the canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.PaintHitboxes">
+<span class="sig-name descname"><span class="pre">PaintHitboxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.PaintHitboxes" title="Permalink to this definition"></a></dt>
+<dd><p>Paints the drawn hitboxes to the canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.PaintRulers">
+<span class="sig-name descname"><span class="pre">PaintRulers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.PaintRulers" title="Permalink to this definition"></a></dt>
+<dd><p>Paints the rulers on the canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.PaintScale">
+<span class="sig-name descname"><span class="pre">PaintScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.PaintScale" title="Permalink to this definition"></a></dt>
+<dd><p>Paints the transformation scaling pins on the selected hitbox.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.PaintSelect">
+<span class="sig-name descname"><span class="pre">PaintSelect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.PaintSelect" title="Permalink to this definition"></a></dt>
+<dd><p>Paints the selection zone.</p>
+<p>If there is no selection zone, then the whole canvas is darkened.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.SavePXT">
+<span class="sig-name descname"><span class="pre">SavePXT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.SavePXT" title="Permalink to this definition"></a></dt>
+<dd><p>Saves the current canvas as PXT to disk.</p>
+<p>The PXT file format is really just a <cite>.tar.gz</cite> compressed directory
+that contains the canvas image and JSON data of the hitboxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filepath</strong> (<em>str</em>) -- the filepath should have a <cite>.pxt</cite> file extension.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.onLeftDown">
+<span class="sig-name descname"><span class="pre">onLeftDown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.onLeftDown" title="Permalink to this definition"></a></dt>
+<dd><p>Records the location of the mouse click.</p>
+<p>If the <cite>Move</cite> tool is selected, then a hitbox is selected.
+If the <cite>Draw</cite> tool is selected, then a hitbox is drawn.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.onLeftUp">
+<span class="sig-name descname"><span class="pre">onLeftUp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.onLeftUp" title="Permalink to this definition"></a></dt>
+<dd><p>Records the size of the drawn rectangle and renders it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.onMiddleDown">
+<span class="sig-name descname"><span class="pre">onMiddleDown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.onMiddleDown" title="Permalink to this definition"></a></dt>
+<dd><p>Records the location of the mouse click.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.onMotion">
+<span class="sig-name descname"><span class="pre">onMotion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.onMotion" title="Permalink to this definition"></a></dt>
+<dd><p>The action of motion depends on the button that is held down.</p>
+<p>If the left button is held down and the <cite>Move</cite> tool is selected, then
+the hitbox is moved.
+If the left button is held down and the <cite>Draw</cite> tool is selected, then
+the hitbox is drawn.
+If the middle button is held down, the canvas is panned.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.onMouseWheel">
+<span class="sig-name descname"><span class="pre">onMouseWheel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.onMouseWheel" title="Permalink to this definition"></a></dt>
+<dd><p>Zooms in or out of the canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.canvas.Canvas.onPaintCanvas">
+<span class="sig-name descname"><span class="pre">onPaintCanvas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.canvas.Canvas.onPaintCanvas" title="Permalink to this definition"></a></dt>
+<dd><p>Paints the background image and the hitboxes on the canvas.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="pixie-trap-constants-module">
-<h2>pixie_trap.constants module<a class="headerlink" href="#pixie-trap-constants-module" title="Permalink to this headline"></a></h2>
+<section id="module-pixie_trap.constants">
+<span id="pixie-trap-constants-module"></span><h2>pixie_trap.constants module<a class="headerlink" href="#module-pixie_trap.constants" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.constants.</span></span><span class="sig-name descname"><span class="pre">Scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.constants.Scale" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.BOTTOM">
+<span class="sig-name descname"><span class="pre">BOTTOM</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.BOTTOM" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.BOTTOM_LEFT">
+<span class="sig-name descname"><span class="pre">BOTTOM_LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">7</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.BOTTOM_LEFT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.BOTTOM_RIGHT">
+<span class="sig-name descname"><span class="pre">BOTTOM_RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.BOTTOM_RIGHT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.LEFT">
+<span class="sig-name descname"><span class="pre">LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.LEFT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.RIGHT">
+<span class="sig-name descname"><span class="pre">RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.RIGHT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.TOP">
+<span class="sig-name descname"><span class="pre">TOP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.TOP" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.TOP_LEFT">
+<span class="sig-name descname"><span class="pre">TOP_LEFT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.TOP_LEFT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.Scale.TOP_RIGHT">
+<span class="sig-name descname"><span class="pre">TOP_RIGHT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#pixie_trap.constants.Scale.TOP_RIGHT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.constants.State">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.constants.</span></span><span class="sig-name descname"><span class="pre">State</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.constants.State" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.State.DRAW">
+<span class="sig-name descname"><span class="pre">DRAW</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#pixie_trap.constants.State.DRAW" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.State.MOVE">
+<span class="sig-name descname"><span class="pre">MOVE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#pixie_trap.constants.State.MOVE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pixie_trap.constants.State.SELECT">
+<span class="sig-name descname"><span class="pre">SELECT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#pixie_trap.constants.State.SELECT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="pixie-trap-frame-module">
-<h2>pixie_trap.frame module<a class="headerlink" href="#pixie-trap-frame-module" title="Permalink to this headline"></a></h2>
+<section id="module-pixie_trap.frame">
+<span id="pixie-trap-frame-module"></span><h2>pixie_trap.frame module<a class="headerlink" href="#module-pixie_trap.frame" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.frame.</span></span><span class="sig-name descname"><span class="pre">Frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">wx._core.Frame</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.ContinueDialog">
+<span class="sig-name descname"><span class="pre">ContinueDialog</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.ContinueDialog" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if the current canvas is saved and if not, asks the user if
+they want to continue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><cite>True</cite> if the user wants to continue, <cite>False</cite> otherwise.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.InitFileMenu">
+<span class="sig-name descname"><span class="pre">InitFileMenu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.InitFileMenu" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.InitMenuBar">
+<span class="sig-name descname"><span class="pre">InitMenuBar</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.InitMenuBar" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.InitToolBar">
+<span class="sig-name descname"><span class="pre">InitToolBar</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.InitToolBar" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.Save">
+<span class="sig-name descname"><span class="pre">Save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_dialog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.Save" title="Permalink to this definition"></a></dt>
+<dd><p>Show the <cite>wx.FileDialog</cite> if there is no filepath and save the
+current canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onFileMenuExit">
+<span class="sig-name descname"><span class="pre">onFileMenuExit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onFileMenuExit" title="Permalink to this definition"></a></dt>
+<dd><p>Asks to save the current canvas and exits the program.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onFileMenuExportAs">
+<span class="sig-name descname"><span class="pre">onFileMenuExportAs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onFileMenuExportAs" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a new file and exports the current canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onFileMenuNew">
+<span class="sig-name descname"><span class="pre">onFileMenuNew</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onFileMenuNew" title="Permalink to this definition"></a></dt>
+<dd><p>Asks to save the current canvas and opens a new file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onFileMenuOpen">
+<span class="sig-name descname"><span class="pre">onFileMenuOpen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onFileMenuOpen" title="Permalink to this definition"></a></dt>
+<dd><p>Create and show the <cite>wx.FileDialog</cite> to open a file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onFileMenuSave">
+<span class="sig-name descname"><span class="pre">onFileMenuSave</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onFileMenuSave" title="Permalink to this definition"></a></dt>
+<dd><p>Save the current canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onFileMenuSaveAs">
+<span class="sig-name descname"><span class="pre">onFileMenuSaveAs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onFileMenuSaveAs" title="Permalink to this definition"></a></dt>
+<dd><p>Create a new file and save the current canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onHitboxSelected">
+<span class="sig-name descname"><span class="pre">onHitboxSelected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onHitboxSelected" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the hitbox properties in the inspector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onIsolateHitboxes">
+<span class="sig-name descname"><span class="pre">onIsolateHitboxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onIsolateHitboxes" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the displayed hitboxes on the canvas.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onSpriteProperties">
+<span class="sig-name descname"><span class="pre">onSpriteProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onSpriteProperties" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the canvas sprite from the inspector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onSpriteSelected">
+<span class="sig-name descname"><span class="pre">onSpriteSelected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onSpriteSelected" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the sprite properties in the inspector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onSpritesheetProperties">
+<span class="sig-name descname"><span class="pre">onSpritesheetProperties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onSpritesheetProperties" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the canvas rulers from the inspector.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onToolColourPicker">
+<span class="sig-name descname"><span class="pre">onToolColourPicker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onToolColourPicker" title="Permalink to this definition"></a></dt>
+<dd><p>Opens the colour dialog and sets the draw colour.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onToolDraw">
+<span class="sig-name descname"><span class="pre">onToolDraw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onToolDraw" title="Permalink to this definition"></a></dt>
+<dd><p>Toggles the draw tool on.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onToolMove">
+<span class="sig-name descname"><span class="pre">onToolMove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onToolMove" title="Permalink to this definition"></a></dt>
+<dd><p>Toggles the move tool on.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onToolSelect">
+<span class="sig-name descname"><span class="pre">onToolSelect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onToolSelect" title="Permalink to this definition"></a></dt>
+<dd><p>Toggles the select tool on.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.frame.Frame.onTransparency">
+<span class="sig-name descname"><span class="pre">onTransparency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">event</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.frame.Frame.onTransparency" title="Permalink to this definition"></a></dt>
+<dd><p>Updates the hitbox transparency.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="pixie-trap-inspector-module">
-<h2>pixie_trap.inspector module<a class="headerlink" href="#pixie-trap-inspector-module" title="Permalink to this headline"></a></h2>
+<section id="module-pixie_trap.inspector">
+<span id="pixie-trap-inspector-module"></span><h2>pixie_trap.inspector module<a class="headerlink" href="#module-pixie_trap.inspector" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.inspector.</span></span><span class="sig-name descname"><span class="pre">Inspector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">wx._core.Panel</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.DisableHitboxProperties">
+<span class="sig-name descname"><span class="pre">DisableHitboxProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.DisableHitboxProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.DisableSpriteProperties">
+<span class="sig-name descname"><span class="pre">DisableSpriteProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.DisableSpriteProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.DisableSpritesheetProperties">
+<span class="sig-name descname"><span class="pre">DisableSpritesheetProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.DisableSpritesheetProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.EnableHitboxProperties">
+<span class="sig-name descname"><span class="pre">EnableHitboxProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.EnableHitboxProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.EnableSpriteProperties">
+<span class="sig-name descname"><span class="pre">EnableSpriteProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.EnableSpriteProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.EnableSpritesheetProperties">
+<span class="sig-name descname"><span class="pre">EnableSpritesheetProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.EnableSpritesheetProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.InitHitboxProperties">
+<span class="sig-name descname"><span class="pre">InitHitboxProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.InitHitboxProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.InitSpriteProperties">
+<span class="sig-name descname"><span class="pre">InitSpriteProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.InitSpriteProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.InitSpritesheetProperties">
+<span class="sig-name descname"><span class="pre">InitSpritesheetProperties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.InitSpritesheetProperties" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.inspector.Inspector.SizeWidgets">
+<span class="sig-name descname"><span class="pre">SizeWidgets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.inspector.Inspector.SizeWidgets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="pixie-trap-main-module">
-<h2>pixie_trap.main module<a class="headerlink" href="#pixie-trap-main-module" title="Permalink to this headline"></a></h2>
+<section id="module-pixie_trap.main">
+<span id="pixie-trap-main-module"></span><h2>pixie_trap.main module<a class="headerlink" href="#module-pixie_trap.main" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="pixie_trap.main.main">
+<span class="sig-prename descclassname"><span class="pre">pixie_trap.main.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.main.main" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </section>
-<section id="pixie-trap-primitives-module">
-<h2>pixie_trap.primitives module<a class="headerlink" href="#pixie-trap-primitives-module" title="Permalink to this headline"></a></h2>
+<section id="module-pixie_trap.primitives">
+<span id="pixie-trap-primitives-module"></span><h2>pixie_trap.primitives module<a class="headerlink" href="#module-pixie_trap.primitives" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.primitives.</span></span><span class="sig-name descname"><span class="pre">Point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Point" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Point.Set">
+<span class="sig-name descname"><span class="pre">Set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Point.Set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Rect">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.primitives.</span></span><span class="sig-name descname"><span class="pre">Rect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Rect" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Rect.Contains">
+<span class="sig-name descname"><span class="pre">Contains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Rect.Contains" title="Permalink to this definition"></a></dt>
+<dd><p>Returns <cite>True</cite> if the point is inside the rectangle, otherwise <cite>False</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Rect.Scale">
+<span class="sig-name descname"><span class="pre">Scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Rect.Scale" title="Permalink to this definition"></a></dt>
+<dd><p>Scales the rectangle based on the direction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Rect.Set">
+<span class="sig-name descname"><span class="pre">Set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Rect.Set" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Rect.center">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">center</span></span><a class="headerlink" href="#pixie_trap.primitives.Rect.center" title="Permalink to this definition"></a></dt>
+<dd><p>The center point of the rectangle.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Rect.centre">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">centre</span></span><a class="headerlink" href="#pixie_trap.primitives.Rect.centre" title="Permalink to this definition"></a></dt>
+<dd><p>The centre point of the rectangle.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.primitives.</span></span><span class="sig-name descname"><span class="pre">ScaleRects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_left=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_right=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_left=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_right=&lt;pixie_trap.primitives.Rect</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.SelectScale">
+<span class="sig-name descname"><span class="pre">SelectScale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.SelectScale" title="Permalink to this definition"></a></dt>
+<dd><p>Selects a scaleation based on which rectangle contains the given point.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.Set">
+<span class="sig-name descname"><span class="pre">Set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rect</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.Set" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the scale rectangles based on the given rectangle and radius.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.bottom">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bottom</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.bottom" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.bottom_left">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bottom_left</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.bottom_left" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.bottom_right">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bottom_right</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.bottom_right" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.left">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">left</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.left" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.right">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">right</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.right" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.top">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">top</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.top" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.top_left">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">top_left</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.top_left" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="pixie_trap.primitives.ScaleRects.top_right">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">top_right</span></span><a class="headerlink" href="#pixie_trap.primitives.ScaleRects.top_right" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pixie_trap.primitives.Sprite">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pixie_trap.primitives.</span></span><span class="sig-name descname"><span class="pre">Sprite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pixie_trap.primitives.Sprite" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
 </section>
 <section id="module-pixie_trap">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pixie_trap" title="Permalink to this headline"></a></h2>
