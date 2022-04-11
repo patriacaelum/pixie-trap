@@ -1,7 +1,11 @@
 import enum
+import os
 import wx
 
 from wx.lib.newevent import NewEvent
+
+
+BASE_DIR = os.path.dirname(__file__)
 
 
 IMAGE_WILDCARD = "All files (*)|*|BMP files (*.bmp)|*.bmp|JPG files (*.jpg)|*.jpg|PNG files (*.png)|*.png"

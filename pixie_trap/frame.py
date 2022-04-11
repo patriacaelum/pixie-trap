@@ -3,6 +3,7 @@ import wx
 
 from canvas import Canvas
 from constants import State
+from constants import BASE_DIR
 from constants import EXPAND
 from constants import IMAGE_WILDCARD, JSON_WILDCARD, PXT_WILDCARD
 from constants import EVT_UPDATE_INSPECTOR_HITBOX, EVT_UPDATE_INSPECTOR_SPRITE
@@ -13,7 +14,7 @@ class Frame(wx.Frame):
     def __init__(self, parent=None):
         super().__init__(
             parent=parent,
-            title="sprite-hitbox-generator",
+            title="pixie-trap",
             size=wx.Size(640, 480),
             style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
         )
@@ -188,7 +189,7 @@ class Frame(wx.Frame):
         self.tool_select = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Select",
-            bitmap=wx.Bitmap(name="assets/tool_select.png"),
+            bitmap=wx.Bitmap(name=os.path.join(BASE_DIR, "assets/tool_select.png")),
             kind=wx.ITEM_CHECK,
         )
 
@@ -197,7 +198,7 @@ class Frame(wx.Frame):
         self.tool_move = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Move",
-            bitmap=wx.Bitmap(name="assets/tool_move.png"),
+            bitmap=wx.Bitmap(name=os.path.join(BASE_DIR, "assets/tool_move.png")),
             kind=wx.ITEM_CHECK,
         )
 
@@ -206,7 +207,7 @@ class Frame(wx.Frame):
         self.tool_draw = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Draw",
-            bitmap=wx.Bitmap(name="assets/tool_draw.png"),
+            bitmap=wx.Bitmap(name=os.path.join(BASE_DIR, "assets/tool_draw.png")),
             kind=wx.ITEM_CHECK,
         )
 
@@ -215,7 +216,7 @@ class Frame(wx.Frame):
         self.tool_colour_picker = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Colour Picker",
-            bitmap=wx.Bitmap(name="assets/tool_colour_picker.png"),
+            bitmap=wx.Bitmap(name=os.path.join(BASE_DIR, "assets/tool_colour_picker.png")),
             kind=wx.ITEM_NORMAL,
         )
 
