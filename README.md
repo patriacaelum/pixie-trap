@@ -5,7 +5,7 @@ Allows placing hitboxes for a sprite atlas and exports them in a JSON format.
 
 ### Load Canvas
 
-When first running the program, the canvas will be blank. You can go to `File -> New` to select an image file to load as the canvas. Alternatively, go to `File -> Open` to open a workfile that was saved from a previous session.
+When first running the program, the canvas will be blank. You can go to `File -> New` to select an image file to load as the canvas. Alternatively, go to `File -> Open` to open a workfile that was saved from a previous session. You can move the canvas around by holding the middle mouse button and dragging.
 
 ### Select Sprite
 
