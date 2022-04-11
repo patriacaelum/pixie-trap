@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [ main ]
+    branches: [ never ]
 
 jobs:
   deploy_github_pages:

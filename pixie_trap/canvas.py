@@ -483,10 +483,13 @@ class Canvas(wx.Panel):
 
         elif key == wx.WXK_LEFT:
             hitbox.x -= 1
+
         elif key == wx.WXK_UP:
             hitbox.y -= 1
+
         elif key == wx.WXK_RIGHT:
             hitbox.x += 1
+
         elif key == wx.WXK_DOWN:
             hitbox.y += 1
 
