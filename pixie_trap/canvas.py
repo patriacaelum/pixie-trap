@@ -26,6 +26,8 @@ class Canvas(wx.Panel):
         self.left_down = Point()
         self.middle_down = Point()
 
+        self.bg_colour = wx.Colour(128, 128, 128, 255)
+
         self.bmp = wx.Bitmap()
         self.bmp_position = Rect()
         self.rows = 1
@@ -55,6 +57,7 @@ class Canvas(wx.Panel):
 
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
 
+        self.Bind(wx.EVT_SIZE, self.onSize)
         self.Bind(wx.EVT_PAINT, self.onPaintCanvas)
 
     def ExportJSON(self, filepath):
@@ -707,6 +710,17 @@ class Canvas(wx.Panel):
         dc = wx.AutoBufferedPaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
 
+        w, h = self.GetSize()
+
+        # Paint background
+        gc.DrawBitmap(
+            bmp=self.bg,
+            x=0,
+            y=0,
+            w=w,
+            h=h,
+        )
+
         if self.bmp_loaded:
             self.PaintBMP(gc)
             self.PaintRulers(dc)
@@ -720,3 +734,16 @@ class Canvas(wx.Panel):
             self.PaintScale(gc)
 
         self.saved = False
+
+    def onSize(self, event):
+        """Resizes the background when the windows is resized."""
+        w, h = event.GetSize()
+
+        self.bg = wx.Bitmap.FromRGBA(
+            width=w,
+            height=h,
+            red=self.bg_colour.red,
+            green=self.bg_colour.green,
+            blue=self.bg_colour.blue,
+            alpha=self.bg_colour.alpha,
+        )

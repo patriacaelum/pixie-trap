@@ -16,7 +16,7 @@ class Frame(wx.Frame):
             parent=parent,
             title="pixie-trap",
             size=wx.Size(640, 480),
-            style=wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL,
+            style=wx.DEFAULT_FRAME_STYLE | wx.CLIP_CHILDREN,
         )
 
         self.filepath = None
