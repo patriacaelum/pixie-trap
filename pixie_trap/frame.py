@@ -6,14 +6,24 @@ from constants import State
 from constants import BASE_DIR
 from constants import EXPAND
 from constants import IMAGE_WILDCARD, JSON_WILDCARD, PXT_WILDCARD
-from constants import EVT_UPDATE_INSPECTOR_HITBOX, EVT_UPDATE_INSPECTOR_SPRITE
+from constants import UpdateInspectorHitboxEvent, EVT_UPDATE_INSPECTOR_HITBOX
+from constants import UpdateInspectorSpriteEvent, EVT_UPDATE_INSPECTOR_SPRITE
 from inspector import Inspector
 
 
 class Frame(wx.Frame):
-    def __init__(self, parent=None):
+    """The main window that houses the application.
+
+    The application consists of the major components:
+
+    - The menu bar at the top of the window.
+    - The toolbar on the left side of the window.
+    - The inspector panel on the right side of the window.
+    - The canvas where the graphics are rendered in the centre of the window.
+    """
+    def __init__(self):
         super().__init__(
-            parent=parent,
+            parent=None,
             title="pixie-trap",
             size=wx.Size(640, 480),
             style=wx.DEFAULT_FRAME_STYLE | wx.CLIP_CHILDREN,
@@ -107,6 +117,18 @@ class Frame(wx.Frame):
         return True
 
     def InitFileMenu(self):
+        """Initializes the `File` menu.
+
+        The `File` menu consists of the items:
+
+        - New
+        - Open
+        - Close
+        - Save
+        - Save As...
+        - Export As...
+        - Exit
+        """
         self.file_menu = wx.Menu()
 
         self.file_menu_new = wx.MenuItem(
@@ -174,6 +196,13 @@ class Frame(wx.Frame):
         self.file_menu.Append(self.file_menu_exit)
 
     def InitMenuBar(self):
+        """Initializes the menu bar.
+
+        The menu bar consists of the items:
+
+        - File
+
+        """
         self.menu_bar = wx.MenuBar(0)
 
         self.InitFileMenu()
@@ -182,6 +211,18 @@ class Frame(wx.Frame):
         self.SetMenuBar(self.menu_bar)
 
     def InitToolBar(self):
+        """Initializes the toolbar.
+
+        The toolbar icons are expected to be in the `assets` directory relative
+        to the main application.
+
+        The toolbar consists of the items:
+
+        - Select
+        - Move
+        - Draw
+        - Colour Picker
+        """
         self.tool_bar = self.CreateToolBar(
             style=wx.TB_VERTICAL,
             id=wx.ID_ANY,
@@ -223,9 +264,15 @@ class Frame(wx.Frame):
 
         self.tool_bar.Realize()
 
-    def Save(self, show_dialog=False):
+    def Save(self, show_dialog: bool = False):
         """Show the `wx.FileDialog` if there is no filepath and save the 
         current canvas.
+
+        Parameters
+        -----------
+        show_dialog: bool
+            The dialog will always be shown if this parameter is set to
+            `True`.
         """
         if self.filepath is None or show_dialog:
             with wx.FileDialog(
@@ -246,14 +293,25 @@ class Frame(wx.Frame):
 
         self.canvas.SavePXT(self.filepath)
 
-    def onFileMenuExit(self, event):
-        """Asks to save the current canvas and exits the program."""
+    def onFileMenuExit(self, event: wx.MenuEvent):
+        """Asks to save the current canvas and exits the program.
+        
+        Parameters
+        -----------
+        event: wx.MenuEvent
+            Contains information about the menu event.
+        """
         if self.ContinueDialog():
             self.Close()
 
-    def onFileMenuNew(self, event):
-        """Asks to save the current canvas and opens a new file."""
-        print(self.canvas.saved)
+    def onFileMenuNew(self, event: wx.MenuEvent):
+        """Asks to save the current canvas and opens a new file.
+        
+        Parameters
+        -----------
+        event: wx.MenuEvent
+            Containts information about the menu event.
+        """
         if not self.ContinueDialog():
             return
 
@@ -277,8 +335,14 @@ class Frame(wx.Frame):
 
         self.Refresh()
 
-    def onFileMenuOpen(self, event):
-        """Create and show the `wx.FileDialog` to open a file."""
+    def onFileMenuOpen(self, event: wx.MenuEvent):
+        """Create and show the `wx.FileDialog` to open a file.
+
+        Parameters
+        -----------
+        event: wx.MenuEvent
+            Contains information about the menu event.
+        """
         if not self.ContinueDialog():
             return
 
@@ -308,16 +372,34 @@ class Frame(wx.Frame):
 
         self.Refresh()
 
-    def onFileMenuSave(self, event):
-        """Save the current canvas."""
+    def onFileMenuSave(self, event: wx.MenuEvent):
+        """Save the current canvas.
+
+        Parameters
+        -----------
+        event: wx.MenuEvent
+            Contains information about the menu.
+        """
         self.Save()
 
-    def onFileMenuSaveAs(self, event):
-        """Create a new file and save the current canvas."""
+    def onFileMenuSaveAs(self, event: wx.MenuEvent):
+        """Create a new file and save the current canvas.
+        
+        Parameters
+        -----------
+        event: wx.MenuEvent
+            Contains information about the menu.
+        """
         self.Save(show_dialog=True)
 
-    def onFileMenuExportAs(self, event):
-        """Creates a new file and exports the current canvas."""
+    def onFileMenuExportAs(self, event: wx.MenuEvent):
+        """Creates a new file and exports the current canvas.
+        
+        Parameters
+        -----------
+        event: wx.MenuEvent
+            Contains information about the menu.
+        """
         with wx.FileDialog(
                     parent=self,
                     message="Export current canvas",
@@ -331,8 +413,14 @@ class Frame(wx.Frame):
 
         self.canvas.ExportJSON(filepath)
 
-    def onHitboxSelected(self, event):
-        """Updates the hitbox properties in the inspector."""
+    def onHitboxSelected(self, event: UpdateInspectorHitboxEvent):
+        """Updates the hitbox properties in the inspector.
+
+        Parameters
+        -----------
+        event: UpdateInspectorHitboxEvent
+            Custom event.
+        """
         hitbox = self.canvas.sprites[self.canvas.select].hitboxes[self.canvas.hitbox_select]
         select = self.canvas.select_position
 
@@ -346,20 +434,38 @@ class Frame(wx.Frame):
 
         self.inspector.EnableHitboxProperties()
 
-    def onIsolateHitboxes(self, event):
-        """Updates the displayed hitboxes on the canvas."""
+    def onIsolateHitboxes(self, event: wx.CommandEvent):
+        """Updates the displayed hitboxes on the canvas.
+        
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         self.canvas.isolate = self.inspector.isolate_hitboxes.GetValue()
 
         self.Refresh()
 
-    def onSpriteProperties(self, event):
-        """Updates the canvas sprite from the inspector."""
+    def onSpriteProperties(self, event: wx.CommandEvent):
+        """Updates the canvas sprite from the inspector.
+        
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         self.canvas.sprites[self.canvas.select].label = self.inspector.sprite_label.GetValue()
 
         self.canvas.saved = False
 
-    def onSpriteSelected(self, event):
-        """Updates the sprite properties in the inspector."""
+    def onSpriteSelected(self, event: UpdateInspectorSpriteEvent):
+        """Updates the sprite properties in the inspector.
+
+        Parameters
+        -----------
+        event: UpdateInspectorSpriteEvent
+            Custom event.
+        """
         select = self.canvas.select
 
         if select is None:
@@ -369,8 +475,14 @@ class Frame(wx.Frame):
 
             self.inspector.EnableSpriteProperties()
 
-    def onSpritesheetProperties(self, event):
-        """Updates the canvas rulers from the inspector."""
+    def onSpritesheetProperties(self, event: wx.CommandEvent):
+        """Updates the canvas rulers from the inspector.
+        
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         self.canvas.rows = int(self.inspector.spritesheet_rows.GetValue())
         self.canvas.cols = int(self.inspector.spritesheet_cols.GetValue())
 
@@ -378,8 +490,14 @@ class Frame(wx.Frame):
 
         self.canvas.saved = False
 
-    def onToolColourPicker(self, event):
-        """Opens the colour dialog and sets the draw colour."""
+    def onToolColourPicker(self, event: wx.CommandEvent):
+        """Opens the colour dialog and sets the draw colour.
+        
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         with wx.ColourDialog(parent=self) as dialog:
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
@@ -394,8 +512,14 @@ class Frame(wx.Frame):
 
         self.Refresh()
 
-    def onToolDraw(self, event):
-        """Toggles the draw tool on."""
+    def onToolDraw(self, event: wx.CommandEvent):
+        """Toggles the draw tool on.
+
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         self.canvas.state = State.DRAW
         self.canvas.hitbox_select = None
         self.canvas.select_preview.Set(0, 0, 0, 0)
@@ -410,8 +534,14 @@ class Frame(wx.Frame):
 
         self.Refresh()
 
-    def onToolMove(self, event):
-        """Toggles the move tool on."""
+    def onToolMove(self, event: wx.CommandEvent):
+        """Toggles the move tool on.
+        
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         self.canvas.state = State.MOVE
         self.canvas.hitbox_select = None
         self.canvas.select_preview.Set(0, 0, 0, 0)
@@ -426,8 +556,14 @@ class Frame(wx.Frame):
 
         self.Refresh()
 
-    def onToolSelect(self, event):
-        """Toggles the select tool on."""
+    def onToolSelect(self, event: wx.CommandEvent):
+        """Toggles the select tool on.
+
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         self.canvas.state = State.SELECT
         self.canvas.hitbox_select = None
 
@@ -441,8 +577,14 @@ class Frame(wx.Frame):
 
         self.Refresh()
 
-    def onTransparency(self, event):
-        """Updates the hitbox transparency."""
+    def onTransparency(self, event: wx.CommandEvent):
+        """Updates the hitbox transparency.
+        
+        Parameters
+        -----------
+        event: wx.CommandEvent
+            Contains information about command events from controls.
+        """
         colour = self.canvas.hitbox_colour
         self.canvas.hitbox_colour.Set(
             colour.red,
