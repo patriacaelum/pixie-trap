@@ -4,7 +4,15 @@ from constants import CENTER_RIGHT, EXPAND
 
 
 class Inspector(wx.Panel):
-    def __init__(self, parent):
+    """The inspector panel displays information about the canvas and the
+    currently selected items.
+
+    Parameters
+    -----------
+    parent: wx.Frame
+        The parent window of the application.
+    """
+    def __init__(self, parent: wx.Frame):
         super().__init__(parent=parent)
 
         self.SetMaxSize(wx.Size(300, -1))
@@ -16,6 +24,20 @@ class Inspector(wx.Panel):
         self.SizeWidgets()
 
     def DisableHitboxProperties(self):
+        """Disables the ability to edit the hitbox properties.
+
+        The following items are disabled:
+
+        - Hitbox global x-position
+        - Hitbox global y-position
+        - Hitbox local x-position
+        - Hitbox local y-position
+        - Hitbox width
+        - Hitbox height
+        - Hitbox label
+        - Hitbox transparency
+
+        """
         self.hitbox_line_label.Disable()
         self.hitbox_line_widget.Disable()
 
@@ -47,6 +69,14 @@ class Inspector(wx.Panel):
         self.transparency.Disable()
 
     def DisableSpriteProperties(self):
+        """Disables the ability to edit sprite properties.
+
+        The following items are disabled:
+
+        - Sprite label
+        - Sprite isolation
+
+        """
         self.sprite_line_label.Disable()
         self.sprite_line_widget.Disable()
 
@@ -60,6 +90,14 @@ class Inspector(wx.Panel):
         self.isolate_hitboxes.Disable()
 
     def DisableSpritesheetProperties(self):
+        """Disables the ability to edit spritesheet properties.
+
+        The following items are disabled:
+
+        - Spritesheet rows
+        - Spritesheet columns
+
+        """
         self.spritesheet_line_label.Disable()
         self.spritesheet_line_widget.Disable()
 
@@ -73,6 +111,20 @@ class Inspector(wx.Panel):
         self.spritesheet_cols.Disable()
 
     def EnableHitboxProperties(self):
+        """Enables the ability to edit the hitbox properties.
+
+        The following items are enabled:
+
+        - Hitbox global x-position
+        - Hitbox global y-position
+        - Hitbox local x-position
+        - Hitbox local y-position
+        - Hitbox width
+        - Hitbox height
+        - Hitbox label
+        - Hitbox transparency
+
+        """
         self.hitbox_line_label.Enable()
         self.hitbox_line_widget.Enable()
 
@@ -104,6 +156,14 @@ class Inspector(wx.Panel):
         self.transparency.Enable()
 
     def EnableSpriteProperties(self):
+        """Enables the ability to edit sprite properties.
+
+        The following items are enabled:
+
+        - Sprite label
+        - Sprite isolation
+
+        """
         self.sprite_line_label.Enable()
         self.sprite_line_widget.Enable()
 
@@ -117,6 +177,14 @@ class Inspector(wx.Panel):
         self.isolate_hitboxes.Enable()
 
     def EnableSpritesheetProperties(self):
+        """Enables the ability to edit spritesheet properties.
+
+        The following items are enabled:
+
+        - Spritesheet rows
+        - Spritesheet columns
+
+        """
         self.spritesheet_line_label.Enable()
         self.spritesheet_line_widget.Enable()
 
@@ -130,6 +198,21 @@ class Inspector(wx.Panel):
         self.spritesheet_cols.Enable()
 
     def InitHitboxProperties(self):
+        """Initializes the hitbox properties.
+
+        The following items are initialized:
+
+        - Hitbox global x-position
+        - Hitbox global y-position
+        - Hitbox local x-position
+        - Hitbox local y-position
+        - Hitbox width
+        - Hitbox height
+        - Hitbox label
+        - Hitbox transparency
+
+        """
+
         self.hitbox_line_label = wx.StaticLine(parent=self)
         self.hitbox_line_widget = wx.StaticLine(parent=self)
 
@@ -169,6 +252,14 @@ class Inspector(wx.Panel):
         )
 
     def InitSpriteProperties(self):
+        """Initializes the sprite properties.
+
+        The following items are initialized:
+
+        - Sprite label
+        - Sprite isolation
+
+        """
         self.sprite_line_label = wx.StaticLine(parent=self)
         self.sprite_line_widget = wx.StaticLine(parent=self)
 
@@ -183,6 +274,14 @@ class Inspector(wx.Panel):
         self.isolate_hitboxes = wx.CheckBox(parent=self, label="Enable")
 
     def InitSpritesheetProperties(self):
+        """Initialized the spritesheet properties.
+
+        The following items are initialized:
+
+        - Spritesheet rows
+        - Spritesheet columns
+
+        """
         self.spritesheet_line_label = wx.StaticLine(parent=self)
         self.spritesheet_line_widget = wx.StaticLine(parent=self)
 
@@ -207,6 +306,7 @@ class Inspector(wx.Panel):
         )
 
     def SizeWidgets(self):
+        """Places all the initialized items in the inspector panel."""
         sizer = wx.FlexGridSizer(cols=2, vgap=10, hgap=5)
 
         ##########################

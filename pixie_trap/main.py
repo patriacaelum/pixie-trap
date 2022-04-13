@@ -4,6 +4,7 @@ from frame import Frame
 
 
 def main():
+    """The main loop of the application."""
     app = wx.App()
 
     pixie_trap = Frame()
