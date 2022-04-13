@@ -101,10 +101,10 @@ class Frame(wx.Frame):
                 parent=self
             )
 
-            if confirm_continue == wx.YES:
-                return True
+            if confirm_continue == wx.NO:
+                return False
 
-        return False
+        return True
 
     def InitFileMenu(self):
         self.file_menu = wx.Menu()
@@ -253,6 +253,7 @@ class Frame(wx.Frame):
 
     def onFileMenuNew(self, event):
         """Asks to save the current canvas and opens a new file."""
+        print(self.canvas.saved)
         if not self.ContinueDialog():
             return
 
@@ -292,7 +293,10 @@ class Frame(wx.Frame):
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
+            filepath = dialog.GetPath()
+
             self.canvas.LoadPXT(dialog.GetPath())
+            self.filepath = filepath
 
         rows = self.canvas.rows
         cols = self.canvas.cols
@@ -352,6 +356,8 @@ class Frame(wx.Frame):
         """Updates the canvas sprite from the inspector."""
         self.canvas.sprites[self.canvas.select].label = self.inspector.sprite_label.GetValue()
 
+        self.canvas.saved = False
+
     def onSpriteSelected(self, event):
         """Updates the sprite properties in the inspector."""
         select = self.canvas.select
@@ -369,6 +375,8 @@ class Frame(wx.Frame):
         self.canvas.cols = int(self.inspector.spritesheet_cols.GetValue())
 
         self.Refresh()
+
+        self.canvas.saved = False
 
     def onToolColourPicker(self, event):
         """Opens the colour dialog and sets the draw colour."""

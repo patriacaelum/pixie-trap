@@ -125,6 +125,7 @@ class Canvas(wx.Panel):
         self.magnify_factor = 1
 
         self.bmp_loaded = True
+        self.saved = False
 
     def LoadPXT(self, filepath):
         """Loads data from a PXT file into the current canvas."""
@@ -169,6 +170,9 @@ class Canvas(wx.Panel):
 
         # Remove temporary directory
         shutil.rmtree(temp_dir)
+
+        self.bmp_loaded = True
+        self.saved = False
 
     def PaintBMP(self, gc):
         """Paints the loaded image to the canvas."""
@@ -498,6 +502,8 @@ class Canvas(wx.Panel):
 
         self.Refresh()
 
+        self.saved = False
+
     def onLeftDown(self, event):
         """Records the location of the mouse click.
 
@@ -570,6 +576,8 @@ class Canvas(wx.Panel):
             )
 
             self.n_hitboxes_created += 1
+
+            self.saved = False
 
     def onLeftUp(self, event):
         """Records the size of the drawn rectangle and renders it."""
@@ -732,8 +740,6 @@ class Canvas(wx.Panel):
 
         if self.state == State.MOVE and self.hitbox_select is not None:
             self.PaintScale(gc)
-
-        self.saved = False
 
     def onSize(self, event):
         """Resizes the background when the windows is resized."""
