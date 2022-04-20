@@ -36,14 +36,6 @@ pixie\_trap.inspector module
    :undoc-members:
    :show-inheritance:
 
-pixie\_trap.main module
------------------------
-
-.. automodule:: pixie_trap.main
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pixie\_trap.primitives module
 -----------------------------
 
