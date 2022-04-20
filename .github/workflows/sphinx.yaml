@@ -19,7 +19,7 @@ jobs:
       - name: install dependencies
         run: |
           pip install -U \
-            -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-16.04 \
+            -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 \
             wxPython
           python -m pip install -r requirements.txt
 
