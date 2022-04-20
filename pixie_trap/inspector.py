@@ -1,6 +1,6 @@
 import wx
 
-from constants import CENTER_RIGHT, EXPAND
+from .constants import CENTER_RIGHT, EXPAND
 
 
 class Inspector(wx.Panel):

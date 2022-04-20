@@ -1,6 +1,6 @@
 import wx
 
-from frame import Frame
+from pixie_trap.frame import Frame
 
 
 def main():

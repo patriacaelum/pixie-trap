@@ -1,14 +1,14 @@
 import os
 import wx
 
-from canvas import Canvas
-from constants import State
-from constants import BASE_DIR
-from constants import EXPAND
-from constants import IMAGE_WILDCARD, JSON_WILDCARD, PXT_WILDCARD
-from constants import UpdateInspectorHitboxEvent, EVT_UPDATE_INSPECTOR_HITBOX
-from constants import UpdateInspectorSpriteEvent, EVT_UPDATE_INSPECTOR_SPRITE
-from inspector import Inspector
+from .canvas import Canvas
+from .constants import State
+from .constants import BASE_DIR
+from .constants import EXPAND
+from .constants import IMAGE_WILDCARD, JSON_WILDCARD, PXT_WILDCARD
+from .constants import UpdateInspectorHitboxEvent, EVT_UPDATE_INSPECTOR_HITBOX
+from .constants import UpdateInspectorSpriteEvent, EVT_UPDATE_INSPECTOR_SPRITE
+from .inspector import Inspector
 
 
 class Frame(wx.Frame):

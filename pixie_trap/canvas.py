@@ -4,9 +4,9 @@ import os
 import shutil
 import wx
 
-from constants import State
-from constants import UpdateInspectorHitboxEvent, UpdateInspectorSpriteEvent
-from primitives import Point, Rect, Sprite, ScaleRects
+from .constants import State
+from .constants import UpdateInspectorHitboxEvent, UpdateInspectorSpriteEvent
+from .primitives import Point, Rect, Sprite, ScaleRects
 
 
 class Canvas(wx.Panel):

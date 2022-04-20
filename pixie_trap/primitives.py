@@ -1,4 +1,4 @@
-from constants import Scale
+from .constants import Scale
 
 
 class Point:
