@@ -1,6 +1,11 @@
+import dataclasses
+
+import numpy as np
+
 from .constants import Scale
 
 
+@dataclasses.dataclass
 class Point:
     """A point in space.
 
@@ -11,8 +16,9 @@ class Point:
     y: int
         The y-coordinate.
     """
-    def __init__(self, x: int = 0, y: int = 0):
-        self.Set(x, y)
+
+    x: int = 0
+    y: int = 0
 
     def Set(self, x: int, y: int):
         """Sets the point position.
@@ -31,6 +37,7 @@ class Point:
         return f"x={self.x}, y={self.y}"
 
 
+@dataclasses.dataclass
 class Rect:
     """A rectangle is defined by its position and size.
 
@@ -47,21 +54,15 @@ class Rect:
     label: str
         The name of the rectangle.
     """
-    def __init__(
-                self, 
-                x: int = 0, 
-                y: int = 0, 
-                w: int = 0, 
-                h: int = 0, 
-                label: str = ""
-            ):
-        self.label = label
 
-        self.Set(x, y, w, h)
+    x: int = 0
+    y: int = 0
+    w: int = 0
+    h: int = 0
 
     def Contains(self, point: Point):
         """Checks if the given :class:`Point` is inside of the rectangle.
-        
+
         Parameters
         -----------
         point: Point
@@ -79,7 +80,7 @@ class Rect:
 
     def Scale(self, scale: Scale, dx: int, dy: int):
         """Scales the rectangle based on the direction.
-        
+
         Parameters
         -----------
         scale: Scale
@@ -157,7 +158,7 @@ class Rect:
     @property
     def centre(self):
         """The centre point of the rectangle.
-        
+
         Returns
         -------
         Point
@@ -170,20 +171,81 @@ class Rect:
         return f"x={self.x}, y={self.y}, w={self.w}, h={self.h}"
 
 
-class Sprite:
-    """A collection of rectangles.
+class Rects:
+    """Represents a group of rectangles.
 
-    The hitboxes are a dictionary mapping a key to a :class:`Rect`.
-
-    Parameters
-    -----------
-    label: str
-        The name of the sprite.
+    This class uses numpy arrays for faster calculations.
     """
-    def __init__(self, label: str):
-        self.label = label
 
-        self.hitboxes = dict()
+    def __init__(self, rects: list = None):
+        if rects is None:
+            rects = []
+
+        x = []
+        y = []
+        w = []
+        h = []
+
+        for rect in rects:
+            x.append(rect.x)
+            y.append(rect.y)
+            w.append(rect.w)
+            h.append(rect.h)
+
+        self.rects = np.array([x, y, w, h])
+
+    def Append(self, rect: Rect):
+        self.rects = np.append(self.rects, [[rect.x], [rect.y], [rect.w], [rect.h]], axis=1) 
+
+    def Delete(self, index: int):
+        self.rects = np.delete(self.rects, index, axis=1)
+
+    def Get(self, index: int):
+        return self[index]
+
+    def Insert(self, index: int, rect: Rect):
+        self.rects = np.insert(self.rects, index, [rect.x, rect.y, rect.w, rect.h], axis=1)
+
+    def Move(self, dx: int = 0, dy: int = 0):
+        """Moves all rectangles."""
+        self.rects.x += np.full_like(shape=self.rects.x, fill_value=dx)
+        self.rects.y += np.full_like(shape=self.rects.y, fill_value=dy)
+
+    def MoveRect(self, index: int, dx: int = 0, dy: int = 0):
+        """Moves a single rectangle."""
+        self.rects.x[index] += dx
+        self.rects.y[index] += dy
+
+    def Set(self, index: int, rect: Rect):
+        self[index] = rect
+
+    def Size(self):
+        return len(self)
+
+    @property
+    def x(self):
+        return self.rects[0]
+
+    @property 
+    def y(self):
+        return self.rects[1]
+
+    @property 
+    def w(self):
+        return self.rects[2]
+
+    @property 
+    def h(self):
+        return self.rects[3]
+
+    def __len__(self):
+        return self.rects.shape[1]
+
+    def __getitem__(self, key: int):
+        return Rect(*self.rects[:, key])
+
+    def __setitem__(self, key: int, value: Rect):
+        self.rects[:, key] = [value.x, value.y, value.w, value.h]
 
 
 class ScaleRects:
@@ -208,17 +270,18 @@ class ScaleRects:
     bottom_right: Rect
         The scaling pin at the bottom right corner.
     """
+
     def __init__(
-                self, 
-                top=Rect(), 
-                left=Rect(),
-                right=Rect(),
-                bottom=Rect(),
-                top_left=Rect(), 
-                top_right=Rect(),
-                bottom_left=Rect(),
-                bottom_right=Rect(),
-            ):
+        self,
+        top=Rect(),
+        left=Rect(),
+        right=Rect(),
+        bottom=Rect(),
+        top_left=Rect(),
+        top_right=Rect(),
+        bottom_left=Rect(),
+        bottom_right=Rect(),
+    ):
         self.rects = {
             Scale.TOP: top,
             Scale.LEFT: left,
@@ -231,9 +294,9 @@ class ScaleRects:
         }
 
     def SelectScale(self, point: Point):
-        """Selects a scale operation based on which scaling pin contains the 
+        """Selects a scale operation based on which scaling pin contains the
         given point.
-        
+
         Parameters
         -----------
         point: Point
@@ -410,4 +473,3 @@ class ScaleRects:
             The scaling pin at the bottom right corner.
         """
         return self.rects[Scale.BOTTOM_RIGHT]
-

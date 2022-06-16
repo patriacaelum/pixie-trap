@@ -23,6 +23,7 @@ UpdateInspectorSpriteEvent, EVT_UPDATE_INSPECTOR_SPRITE = NewEvent()
 
 class State(enum.Enum):
     """These define the state of the :class:`Canvas`."""
+
     SELECT = enum.auto()
     MOVE = enum.auto()
     DRAW = enum.auto()
@@ -30,6 +31,7 @@ class State(enum.Enum):
 
 class Scale(enum.Enum):
     """These define the possible scaling transformations that can be applied."""
+
     TOP = enum.auto()
     LEFT = enum.auto()
     RIGHT = enum.auto()

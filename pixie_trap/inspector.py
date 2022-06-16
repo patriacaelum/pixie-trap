@@ -12,6 +12,7 @@ class Inspector(wx.Panel):
     parent: wx.Frame
         The parent window of the application.
     """
+
     def __init__(self, parent: wx.Frame):
         super().__init__(parent=parent)
 
@@ -291,16 +292,16 @@ class Inspector(wx.Panel):
 
         self.spritesheet_rows_label = wx.StaticText(parent=self, label="Rows")
         self.spritesheet_rows = wx.TextCtrl(
-            parent=self, 
-            size=(180, -1), 
+            parent=self,
+            size=(180, -1),
             value="1",
             style=wx.TE_PROCESS_ENTER,
         )
 
         self.spritesheet_cols_label = wx.StaticText(parent=self, label="Columns")
         self.spritesheet_cols = wx.TextCtrl(
-            parent=self, 
-            size=(180, -1), 
+            parent=self,
+            size=(180, -1),
             value="1",
             style=wx.TE_PROCESS_ENTER,
         )

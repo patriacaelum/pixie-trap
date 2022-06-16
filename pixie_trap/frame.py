@@ -21,6 +21,7 @@ class Frame(wx.Frame):
     - The inspector panel on the right side of the window.
     - The canvas where the graphics are rendered in the centre of the window.
     """
+
     def __init__(self):
         super().__init__(
             parent=None,
@@ -67,32 +68,60 @@ class Frame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onFileMenuOpen, id=self.file_menu_open.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSave, id=self.file_menu_save.GetId())
         self.Bind(wx.EVT_MENU, self.onFileMenuSaveAs, id=self.file_menu_save_as.GetId())
-        self.Bind(wx.EVT_MENU, self.onFileMenuExportAs, id=self.file_menu_export_as.GetId())
+        self.Bind(
+            wx.EVT_MENU, self.onFileMenuExportAs, id=self.file_menu_export_as.GetId()
+        )
         self.Bind(wx.EVT_MENU, self.onFileMenuExit, id=self.file_menu_exit.GetId())
 
         self.Bind(wx.EVT_TOOL, self.onToolSelect, id=self.tool_select.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolMove, id=self.tool_move.GetId())
         self.Bind(wx.EVT_TOOL, self.onToolDraw, id=self.tool_draw.GetId())
-        self.Bind(wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId())
+        self.Bind(
+            wx.EVT_TOOL, self.onToolColourPicker, id=self.tool_colour_picker.GetId()
+        )
 
-        self.Bind(wx.EVT_TEXT, self.onSpritesheetProperties, id=self.inspector.spritesheet_rows.GetId())
-        self.Bind(wx.EVT_TEXT, self.onSpritesheetProperties, id=self.inspector.spritesheet_cols.GetId())
-        self.Bind(wx.EVT_TEXT, self.onSpriteProperties, id=self.inspector.sprite_label.GetId())
+        self.Bind(
+            wx.EVT_TEXT,
+            self.onSpritesheetProperties,
+            id=self.inspector.spritesheet_rows.GetId(),
+        )
+        self.Bind(
+            wx.EVT_TEXT,
+            self.onSpritesheetProperties,
+            id=self.inspector.spritesheet_cols.GetId(),
+        )
+        self.Bind(
+            wx.EVT_TEXT, self.onSpriteProperties, id=self.inspector.sprite_label.GetId()
+        )
 
-        self.Bind(wx.EVT_TEXT_ENTER, self.onSpritesheetProperties, id=self.inspector.spritesheet_rows.GetId())
-        self.Bind(wx.EVT_TEXT_ENTER, self.onSpritesheetProperties, id=self.inspector.spritesheet_cols.GetId())
-        self.Bind(wx.EVT_TEXT_ENTER, self.onSpriteProperties, id=self.inspector.sprite_label.GetId())
+        self.Bind(
+            wx.EVT_TEXT_ENTER,
+            self.onSpritesheetProperties,
+            id=self.inspector.spritesheet_rows.GetId(),
+        )
+        self.Bind(
+            wx.EVT_TEXT_ENTER,
+            self.onSpritesheetProperties,
+            id=self.inspector.spritesheet_cols.GetId(),
+        )
+        self.Bind(
+            wx.EVT_TEXT_ENTER,
+            self.onSpriteProperties,
+            id=self.inspector.sprite_label.GetId(),
+        )
 
-        self.Bind(wx.EVT_CHECKBOX, self.onIsolateHitboxes, id=self.inspector.isolate_hitboxes.GetId())
+        self.Bind(
+            wx.EVT_CHECKBOX,
+            self.onIsolateHitboxes,
+            id=self.inspector.isolate_hitboxes.GetId(),
+        )
 
-        self.Bind(wx.EVT_SLIDER, self.onTransparency, id=self.inspector.transparency.GetId())
+        self.Bind(
+            wx.EVT_SLIDER, self.onTransparency, id=self.inspector.transparency.GetId()
+        )
 
         self.Bind(EVT_UPDATE_INSPECTOR_HITBOX, self.onHitboxSelected)
         self.Bind(EVT_UPDATE_INSPECTOR_SPRITE, self.onSpriteSelected)
-
-        self.inspector.DisableHitboxProperties()
-        self.inspector.DisableSpriteProperties()
-        self.inspector.DisableSpritesheetProperties()
 
     def ContinueDialog(self):
         """Checks if the current canvas is saved and if not, asks the user if
@@ -108,7 +137,7 @@ class Frame(wx.Frame):
                 message="Current file has not been saved. Continue?",
                 caption="Current canvas not saved",
                 style=wx.ICON_QUESTION | wx.YES_NO,
-                parent=self
+                parent=self,
             )
 
             if confirm_continue == wx.NO:
@@ -158,7 +187,7 @@ class Frame(wx.Frame):
             kind=wx.ITEM_NORMAL,
         )
         self.file_menu.Append(self.file_menu_close)
-        
+
         self.file_menu.AppendSeparator()
 
         self.file_menu_save = wx.MenuItem(
@@ -258,14 +287,16 @@ class Frame(wx.Frame):
         self.tool_colour_picker = self.tool_bar.AddTool(
             toolId=wx.ID_ANY,
             label="Colour Picker",
-            bitmap=wx.Bitmap(name=os.path.join(BASE_DIR, "assets/tool_colour_picker.png")),
+            bitmap=wx.Bitmap(
+                name=os.path.join(BASE_DIR, "assets/tool_colour_picker.png")
+            ),
             kind=wx.ITEM_NORMAL,
         )
 
         self.tool_bar.Realize()
 
     def Save(self, show_dialog: bool = False):
-        """Show the `wx.FileDialog` if there is no filepath and save the 
+        """Show the `wx.FileDialog` if there is no filepath and save the
         current canvas.
 
         Parameters
@@ -276,11 +307,11 @@ class Frame(wx.Frame):
         """
         if self.filepath is None or show_dialog:
             with wx.FileDialog(
-                        parent=self,
-                        message="Save current canvas",
-                        wildcard=PXT_WILDCARD,
-                        style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-                    ) as dialog:
+                parent=self,
+                message="Save current canvas",
+                wildcard=PXT_WILDCARD,
+                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+            ) as dialog:
                 if dialog.ShowModal() == wx.ID_CANCEL:
                     return
 
@@ -295,7 +326,7 @@ class Frame(wx.Frame):
 
     def onFileMenuExit(self, event: wx.MenuEvent):
         """Asks to save the current canvas and exits the program.
-        
+
         Parameters
         -----------
         event: wx.MenuEvent
@@ -306,7 +337,7 @@ class Frame(wx.Frame):
 
     def onFileMenuNew(self, event: wx.MenuEvent):
         """Asks to save the current canvas and opens a new file.
-        
+
         Parameters
         -----------
         event: wx.MenuEvent
@@ -316,13 +347,13 @@ class Frame(wx.Frame):
             return
 
         with wx.FileDialog(
-                    parent=self,
-                    message="Select an image file as a base canvas",
-                    defaultDir=os.getcwd(),
-                    defaultFile="",
-                    wildcard=IMAGE_WILDCARD,
-                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                ) as dialog:
+            parent=self,
+            message="Select an image file as a base canvas",
+            defaultDir=os.getcwd(),
+            defaultFile="",
+            wildcard=IMAGE_WILDCARD,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
@@ -347,13 +378,13 @@ class Frame(wx.Frame):
             return
 
         with wx.FileDialog(
-                    parent=self,
-                    message="Select a file to open",
-                    defaultDir=os.getcwd(),
-                    defaultFile="",
-                    wildcard=PXT_WILDCARD,
-                    style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                ) as dialog:
+            parent=self,
+            message="Select a file to open",
+            defaultDir=os.getcwd(),
+            defaultFile="",
+            wildcard=PXT_WILDCARD,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
@@ -384,7 +415,7 @@ class Frame(wx.Frame):
 
     def onFileMenuSaveAs(self, event: wx.MenuEvent):
         """Create a new file and save the current canvas.
-        
+
         Parameters
         -----------
         event: wx.MenuEvent
@@ -394,18 +425,18 @@ class Frame(wx.Frame):
 
     def onFileMenuExportAs(self, event: wx.MenuEvent):
         """Creates a new file and exports the current canvas.
-        
+
         Parameters
         -----------
         event: wx.MenuEvent
             Contains information about the menu.
         """
         with wx.FileDialog(
-                    parent=self,
-                    message="Export current canvas",
-                    wildcard=JSON_WILDCARD,
-                    style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-                ) as dialog:
+            parent=self,
+            message="Export current canvas",
+            wildcard=JSON_WILDCARD,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as dialog:
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
 
@@ -421,7 +452,9 @@ class Frame(wx.Frame):
         event: UpdateInspectorHitboxEvent
             Custom event.
         """
-        hitbox = self.canvas.sprites[self.canvas.select].hitboxes[self.canvas.hitbox_select]
+        hitbox = self.canvas.sprites[self.canvas.select].hitboxes[
+            self.canvas.hitbox_select
+        ]
         select = self.canvas.select_position
 
         self.inspector.hitbox_label.SetValue(hitbox.label)
@@ -436,7 +469,7 @@ class Frame(wx.Frame):
 
     def onIsolateHitboxes(self, event: wx.CommandEvent):
         """Updates the displayed hitboxes on the canvas.
-        
+
         Parameters
         -----------
         event: wx.CommandEvent
@@ -448,14 +481,13 @@ class Frame(wx.Frame):
 
     def onSpriteProperties(self, event: wx.CommandEvent):
         """Updates the canvas sprite from the inspector.
-        
+
         Parameters
         -----------
         event: wx.CommandEvent
             Contains information about command events from controls.
         """
-        self.canvas.sprites[self.canvas.select].label = self.inspector.sprite_label.GetValue()
-
+        self.canvas.sprite_names[self.canvas.select] = self.inspector.sprite_label.GetValue()
         self.canvas.saved = False
 
     def onSpriteSelected(self, event: UpdateInspectorSpriteEvent):
@@ -471,13 +503,13 @@ class Frame(wx.Frame):
         if select is None:
             self.inspector.DisableSpriteProperties()
         else:
-            self.inspector.sprite_label.SetValue(self.canvas.sprites[select].label)
+            self.inspector.sprite_label.SetValue(self.canvas.sprite_names[select])
 
             self.inspector.EnableSpriteProperties()
 
     def onSpritesheetProperties(self, event: wx.CommandEvent):
         """Updates the canvas rulers from the inspector.
-        
+
         Parameters
         -----------
         event: wx.CommandEvent
@@ -492,7 +524,7 @@ class Frame(wx.Frame):
 
     def onToolColourPicker(self, event: wx.CommandEvent):
         """Opens the colour dialog and sets the draw colour.
-        
+
         Parameters
         -----------
         event: wx.CommandEvent
@@ -536,7 +568,7 @@ class Frame(wx.Frame):
 
     def onToolMove(self, event: wx.CommandEvent):
         """Toggles the move tool on.
-        
+
         Parameters
         -----------
         event: wx.CommandEvent
@@ -579,7 +611,7 @@ class Frame(wx.Frame):
 
     def onTransparency(self, event: wx.CommandEvent):
         """Updates the hitbox transparency.
-        
+
         Parameters
         -----------
         event: wx.CommandEvent
@@ -590,7 +622,7 @@ class Frame(wx.Frame):
             colour.red,
             colour.green,
             colour.blue,
-            self.inspector.transparency.GetValue()
+            self.inspector.transparency.GetValue(),
         )
 
         self.Refresh()

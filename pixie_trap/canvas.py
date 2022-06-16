@@ -6,7 +6,7 @@ import wx
 
 from .constants import State
 from .constants import UpdateInspectorHitboxEvent, UpdateInspectorSpriteEvent
-from .primitives import Point, Rect, Sprite, ScaleRects
+from .primitives import Point, Rect, Rects, ScaleRects
 
 
 class Canvas(wx.Panel):
@@ -14,22 +14,23 @@ class Canvas(wx.Panel):
 
     The canvas consists of the major elements:
 
-    - The background colour
-    - An image file
-    - Rulers defining a sprite atlas
-    - A list of hitboxes
+    - The background colour (`self.bg`)
+    - An image file (`self.sheet`)
+    - Rulers defining a sprite atlas (`self.rows`, `self.cols`)
+    - A list of hitboxes (`self.hitboxes`, `self.destinations`)
 
     Parameters
     -----------
     parent: wx.Frame
         The parent window of the application.
     """
+
     def __init__(self, parent: wx.Frame):
         super().__init__(parent)
 
         self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
 
-        self.bmp_loaded = False
+        self.sheet_loaded = False
         self.isolate = False
         self.saved = True
         self.state = None
@@ -40,18 +41,25 @@ class Canvas(wx.Panel):
         self.left_down = Point()
         self.middle_down = Point()
 
-        self.bg_colour = wx.Colour(128, 128, 128, 255)
+        self.bg_red = wx.Bitmap()
+        self.bg_gray = wx.Bitmap()
+        self.bg_black = wx.Bitmap()
+        self.__size_bg(*self.GetSize())
 
-        self.bmp = wx.Bitmap()
-        self.bmp_position = Rect()
+        self.sheet = wx.Bitmap()
+        self.sheet_pos = Rect()
         self.rows = 1
         self.cols = 1
 
-        self.select = None
+        self.select = None # Otherwise a Point
         self.select_position = Rect()
         self.select_preview = Rect()
 
+        # Maps sprite labels to hitbox labels, and each non-unique hitbox label
+        # maps to an index in destinations
         self.sprites = dict()
+        self.sprite_names = dict()
+        self.destinations = Rects()
         self.n_hitboxes_created = 0
         self.hitbox_buffer = Point()
         self.hitbox_colour = wx.Colour(255, 50, 0, 50)
@@ -60,7 +68,7 @@ class Canvas(wx.Panel):
         self.scale_select = None
         self.scale_radius = 5
         self.scale_rects = ScaleRects()
-        
+
         self.Bind(wx.EVT_LEFT_DOWN, self.onLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.onLeftUp)
 
@@ -106,10 +114,10 @@ class Canvas(wx.Panel):
         data = {
             sprite.label: {
                 hitbox.label: {
-                    "x": hitbox.x - self.select_position.x,
-                    "y": hitbox.y - self.select_position.y,
-                    "w": hitbox.w,
-                    "h": hitbox.h,
+                    "x": int(hitbox.x - self.select_position.x),
+                    "y": int(hitbox.y - self.select_position.y),
+                    "w": int(hitbox.w),
+                    "h": int(hitbox.h),
                 }
                 for hitbox in sprite.hitboxes.values()
             }
@@ -118,7 +126,7 @@ class Canvas(wx.Panel):
 
         try:
             with open(filepath, "w") as file:
-                json.dump(data, file)
+                json.dump(data, file, indent=4, sort_keys=True)
         except IOError:
             wx.LogError(f"Failed to save file in {filepath}")
 
@@ -148,21 +156,17 @@ class Canvas(wx.Panel):
             defining the selection zone relative to the original size of the
             image file.
         """
-        x = (x - self.bmp_position.x) // self.magnify_factor
-        y = (y - self.bmp_position.y) // self.magnify_factor
-        w, h = self.bmp.GetSize()
+        x = (x - self.sheet_pos.x) // self.magnify_factor
+        y = (y - self.sheet_pos.y) // self.magnify_factor
+        w, h = self.sheet.GetSize()
 
         # Create rulers
         vrulers = np.arange(
-            start=0, 
-            stop=w + 1, 
+            start=0,
+            stop=w + 1,
             step=int(w // self.cols),
         )
-        hrulers = np.arange(
-            start=0,
-            stop=h + 1, 
-            step=int(h // self.rows)
-        )
+        hrulers = np.arange(start=0, stop=h + 1, step=int(h // self.rows))
 
         # Find which rectangle in the grid contains the point (x, y)
         x_in = np.logical_and(vrulers[:-1] <= x, x < vrulers[1:])
@@ -184,19 +188,14 @@ class Canvas(wx.Panel):
         filepath: str
             The path to the image file.
         """
-        self.bmp.LoadFile(name=filepath)
-        self.bmp_position.Set(
-            x=0, 
-            y=0, 
-            w=self.bmp.GetWidth(), 
-            h=self.bmp.GetHeight()
-        )
+        self.sheet.LoadFile(name=filepath)
+        self.sheet_pos.Set(x=0, y=0, w=self.sheet.GetWidth(), h=self.sheet.GetHeight())
 
         # Reset magnification settings
         self.magnify = 1
         self.magnify_factor = 1
 
-        self.bmp_loaded = True
+        self.sheet_loaded = True
         self.saved = False
 
     def LoadPXT(self, filepath: str):
@@ -206,7 +205,7 @@ class Canvas(wx.Panel):
         file and a JSON file with the hitboxes.
 
         The steps for loading a PXT file are:
-        
+
         - Decompress the PXT file into a temporary directory
         - Load the image file
         - Load the JSON data
@@ -245,7 +244,7 @@ class Canvas(wx.Panel):
                     ...
                 }
             }
-        
+
         Parameters
         -----------
         filepath: str
@@ -294,24 +293,24 @@ class Canvas(wx.Panel):
         # Remove temporary directory
         shutil.rmtree(temp_dir)
 
-        self.bmp_loaded = True
+        self.sheet_loaded = True
         self.saved = False
 
     def PaintBMP(self, gc: wx.GraphicsContext):
         """Paints the loaded image to the canvas at the current magnification
         setting.
-        
+
         Parameters
         -----------
         gc: wx.GraphicsContext
             The object drawn upon.
         """
-        w, h = self.bmp.GetSize()
+        w, h = self.sheet.GetSize()
 
         gc.DrawBitmap(
-            bmp=self.bmp,
-            x=self.bmp_position.x,
-            y=self.bmp_position.y,
+            bmp=self.sheet,
+            x=self.sheet_pos.x,
+            y=self.sheet_pos.y,
             w=w * self.magnify_factor,
             h=h * self.magnify_factor,
         )
@@ -329,65 +328,23 @@ class Canvas(wx.Panel):
         gc: wx.GraphicsContext
             The object drawn upon.
         """
-        for sprite_label, sprite in self.sprites.items():
+        for sprite_label, sprites in self.sprites.items():
             if self.isolate and sprite_label != self.select:
                 continue
 
-            for hitbox in sprite.hitboxes.values():
+            for hitbox_label, dest_index in sprites.items():
+                hitbox = self.destinations.Get(dest_index)
+
                 if hitbox.w <= 0 or hitbox.h <= 0:
                     continue
 
-                self.PaintRect(
-                    gc=gc,
-                    x=int(self.bmp_position.x + hitbox.x * self.magnify_factor),
-                    y=int(self.bmp_position.y + hitbox.y * self.magnify_factor),
+                gc.DrawBitmap(
+                    bmp=self.bg_red,
+                    x=int(self.sheet_pos.x + hitbox.x * self.magnify_factor),
+                    y=int(self.sheet_pos.y + hitbox.y * self.magnify_factor),
                     w=int(hitbox.w * self.magnify_factor),
                     h=int(hitbox.h * self.magnify_factor),
-                    colour=self.hitbox_colour,
                 )
-
-    def PaintRect(
-                self, 
-                gc: wx.GraphicsContext, 
-                x: int, 
-                y: int, 
-                w: int, 
-                h: int, 
-                colour: wx.Colour
-            ):
-        """Paints a filled in rectangle on the canvas.
-
-        Parameters
-        -----------
-        gc: wx.GraphicsContext
-            The object drawn upon.
-        x: int
-            The x-coordinate of the top left corner of the rectangle.
-        y: int
-            The y-coordinate of the top left corner of the rectangle.
-        w: int
-            The width of the rectangle (in pixels).
-        h: int
-            The height of the rectangle (in pixels).
-        colour: wx.Colour
-            The colour the rectangle will be drawn with.
-        """
-        bmp = wx.Bitmap.FromRGBA(
-            width=w,
-            height=h,
-            red=colour.red,
-            green=colour.green,
-            blue=colour.blue,
-            alpha=colour.alpha,
-        )
-
-        gc.DrawBitmap(
-            bmp=bmp,
-            x=x,
-            y=y,
-            w=w,
-            h=y,
-        )
 
     def PaintRulers(self, dc: wx.DC):
         """Paints the rulers on the canvas.
@@ -401,25 +358,26 @@ class Canvas(wx.Panel):
             The device context where graphics are drawn.
         """
         # Set the colour to cyan
-        dc.SetPen(wx.Pen(
-            colour=wx.Colour(0, 255, 255, 100),
-            width=2
-        ))
+        dc.SetPen(wx.Pen(colour=wx.Colour(0, 255, 255, 100), width=2))
 
         canvas_width, canvas_height = self.GetSize()
 
-        vspace = int(self.bmp_position.h // self.rows)
-        hspace = int(self.bmp_position.w // self.cols)
+        vspace = int(self.sheet_pos.h // self.rows)
+        hspace = int(self.sheet_pos.w // self.cols)
 
-        dc.DrawLineList([
-            (0, self.bmp_position.y + y, canvas_width, self.bmp_position.y + y)
-            for y in range(0, self.bmp_position.h + 1, vspace)
-        ])
+        dc.DrawLineList(
+            [
+                (0, self.sheet_pos.y + y, canvas_width, self.sheet_pos.y + y)
+                for y in range(0, self.sheet_pos.h + 1, vspace)
+            ]
+        )
 
-        dc.DrawLineList([
-            (self.bmp_position.x + x, 0, self.bmp_position.x + x, canvas_height)
-            for x in range(0, self.bmp_position.w + 1, hspace)
-        ])
+        dc.DrawLineList(
+            [
+                (self.sheet_pos.x + x, 0, self.sheet_pos.x + x, canvas_height)
+                for x in range(0, self.sheet_pos.w + 1, hspace)
+            ]
+        )
 
     def PaintScale(self, gc: wx.GraphicsContext):
         """Paints the transformation scaling pins on the selected hitbox.
@@ -435,16 +393,21 @@ class Canvas(wx.Panel):
             The object drawn upon.
         """
         # Set the colour to black
-        gc.SetPen(wx.Pen(
-            colour=wx.Colour(0, 0, 0, 255),
-            width=2
-        ))
+        gc.SetPen(wx.Pen(colour=wx.Colour(0, 0, 0, 255), width=2))
         hitbox = self.sprites[self.select].hitboxes[self.hitbox_select]
 
         # Draw a circle in the centre of the hitbox
         gc.DrawEllipse(
-            x=int(self.bmp_position.x + hitbox.centre.x * self.magnify_factor - self.scale_radius),
-            y=int(self.bmp_position.y + hitbox.centre.y * self.magnify_factor - self.scale_radius),
+            x=int(
+                self.sheet_pos.x
+                + hitbox.centre.x * self.magnify_factor
+                - self.scale_radius
+            ),
+            y=int(
+                self.sheet_pos.y
+                + hitbox.centre.y * self.magnify_factor
+                - self.scale_radius
+            ),
             w=int(2 * self.scale_radius),
             h=int(2 * self.scale_radius),
         )
@@ -458,8 +421,8 @@ class Canvas(wx.Panel):
 
         for rectangle in self.scale_rects.rects.values():
             gc.DrawRectangle(
-                x=self.bmp_position.x + rectangle.x,
-                y=self.bmp_position.y + rectangle.y,
+                x=self.sheet_pos.x + rectangle.x,
+                y=self.sheet_pos.y + rectangle.y,
                 w=rectangle.w,
                 h=rectangle.h,
             )
@@ -475,89 +438,88 @@ class Canvas(wx.Panel):
             The object drawn upon.
         """
         w, h = self.GetSize()
-        black = wx.Colour(0, 0, 0, 255)
 
         if not self.select:
             # Darken entire canvas
-            self.PaintRect(
-                gc=gc, 
-                x=0, 
-                y=0, 
-                w=w, 
-                h=h, 
-                colour=black,
+            gc.DrawBitmap(
+                bmp=self.bg_black,
+                x=0,
+                y=0,
+                w=w,
+                h=h,
             )
 
         else:
             # Darken everywhere except selection zone
             top_left = Point(
-                x=self.bmp_position.x + self.select_position.x * self.magnify_factor, 
-                y=self.bmp_position.y + self.select_position.y * self.magnify_factor,
+                x=self.sheet_pos.x + self.select_position.x * self.magnify_factor,
+                y=self.sheet_pos.y + self.select_position.y * self.magnify_factor,
             )
             top_right = Point(
-                x=self.bmp_position.x + (self.select_position.x + self.select_position.w) * self.magnify_factor, 
-                y=self.bmp_position.y + self.select_position.y * self.magnify_factor,
+                x=self.sheet_pos.x
+                + (self.select_position.x + self.select_position.w)
+                * self.magnify_factor,
+                y=self.sheet_pos.y + self.select_position.y * self.magnify_factor,
             )
             bottom_left = Point(
-                x=self.bmp_position.x + self.select_position.x * self.magnify_factor, 
-                y=self.bmp_position.y + (self.select_position.y + self.select_position.h) * self.magnify_factor,
+                x=self.sheet_pos.x + self.select_position.x * self.magnify_factor,
+                y=self.sheet_pos.y
+                + (self.select_position.y + self.select_position.h)
+                * self.magnify_factor,
             )
             bottom_right = Point(
-                x=self.bmp_position.x + (self.select_position.x + self.select_position.w) * self.magnify_factor, 
-                y=self.bmp_position.y + (self.select_position.y + self.select_position.h) * self.magnify_factor,
+                x=self.sheet_pos.x
+                + (self.select_position.x + self.select_position.w)
+                * self.magnify_factor,
+                y=self.sheet_pos.y
+                + (self.select_position.y + self.select_position.h)
+                * self.magnify_factor,
             )
 
             if top_left.x < w and top_left.y > 0:
-                self.PaintRect(
-                    gc=gc,
+                gc.DrawBitmap(
+                    bmp=self.bg_black,
                     x=top_left.x,
                     y=0,
                     w=w - top_left.x,
                     h=top_left.y,
-                    colour=black,
                 )
 
             if top_right.x < w and top_right.y < h:
-                self.PaintRect(
-                    gc=gc,
+                gc.DrawBitmap(
+                    bmp=self.bg_black,
                     x=top_right.x,
                     y=top_right.y,
                     w=w - top_right.x,
                     h=h - top_right.y,
-                    colour=black,
                 )
 
             if bottom_left.x > 0 and bottom_left.y < h:
-                self.PaintRect(
-                    gc=gc,
+                gc.DrawBitmap(
+                    bmp=self.bg_black,
                     x=0,
                     y=0,
                     w=bottom_left.x,
                     h=bottom_left.y,
-                    colour=black,
                 )
 
             if bottom_right.x > 0 and bottom_right.y < h:
-                self.PaintRect(
-                    gc=gc,
+                gc.DrawBitmap(
+                    bmp=self.bg_black,
                     x=0,
                     y=bottom_right.y,
                     w=bottom_right.x,
                     h=h - bottom_right.y,
-                    colour=black,
                 )
 
         if self.select_preview.w > 0 and self.select_preview.h > 0:
             # Redden selection preview
-            red = wx.Colour(255, 0, 0, 100)
-
-            self.PaintRect(
-                gc=gc,
-                x=self.bmp_position.x + self.select_preview.x * self.magnify_factor,
-                y=self.bmp_position.y + self.select_preview.y * self.magnify_factor,
+            gc.DrawBitmap(
+                bmp=self.bg_red,
+                x=self.sheet_pos.x + self.select_preview.x * self.magnify_factor,
+                y=self.sheet_pos.y + self.select_preview.y * self.magnify_factor,
                 w=self.select_preview.w * self.magnify_factor,
                 h=self.select_preview.h * self.magnify_factor,
-                colour=red,
             )
 
     def SavePXT(self, filepath: str):
@@ -568,7 +530,7 @@ class Canvas(wx.Panel):
 
         The steps for saving a PXT file are:
 
-        - Create a temporary directory 
+        - Create a temporary directory
         - Save the image file
         - Save the JSON data
         - Compress the temporary directory into a PXT file
@@ -607,7 +569,7 @@ class Canvas(wx.Panel):
                     ...
                 }
             }
- 
+
         Parameters
         -----------
         filepath: str
@@ -628,10 +590,7 @@ class Canvas(wx.Panel):
         sprites = dict()
 
         for sprite_key, sprite in self.sprites.items():
-            sprites[sprite.label] = {
-                "sprite_key": sprite_key,
-                "hitboxes": dict()
-            }
+            sprites[sprite.label] = {"sprite_key": sprite_key, "hitboxes": dict()}
 
             for hitbox_key, hitbox in sprite.hitboxes.items():
                 sprites[sprite.label]["hitboxes"][hitbox_key] = {
@@ -648,7 +607,7 @@ class Canvas(wx.Panel):
         os.mkdir(temp_dir)
 
         # Save the image file
-        self.bmp.SaveFile(
+        self.sheet.SaveFile(
             name=canvas_filepath,
             type=wx.BITMAP_TYPE_BMP,
         )
@@ -662,7 +621,7 @@ class Canvas(wx.Panel):
 
         # Compress temporary directory
         archive_filepath = shutil.make_archive(
-            base_name=filepath, 
+            base_name=filepath,
             format="gztar",
             root_dir=temp_dir,
         )
@@ -675,7 +634,7 @@ class Canvas(wx.Panel):
 
     def onKeyDown(self, event: wx.KeyEvent):
         """Processes keyboard events.
-        
+
         If the `Move` tool is selected, then:
 
           - The position of the selected hitbox is moved by one pixel in the
@@ -722,7 +681,7 @@ class Canvas(wx.Panel):
         - set the sprite selected to selection zone.
 
         If the `Move` tool is selected and a sprite is selected:
-        
+
         - if a hitbox is already selected and the user clicked on that hitbox
           again, then use that hitbox for scaling.
         - if no hitbox is being used for scaling, then look for a hitbox that
@@ -752,11 +711,10 @@ class Canvas(wx.Panel):
                 self.select = None
             else:
                 self.select = (self.select_position.x, self.select_position.y)
+                self.sprite_names[self.select] = f"x{self.select[0]}_y{self.select[1]}"
 
                 if self.sprites.get(self.select) is None:
-                    self.sprites[self.select] = Sprite(
-                        label=f"x{self.select_position.x}_y{self.select_position.y}"
-                    )
+                    self.sprites[self.select] = {}
 
             wx.PostEvent(self.Parent, UpdateInspectorSpriteEvent())
 
@@ -766,21 +724,18 @@ class Canvas(wx.Panel):
             # Scale selected hitbox
             if self.hitbox_select is not None:
                 local_position = Point(
-                    x=self.left_down.x - self.bmp_position.x,
-                    y=self.left_down.y - self.bmp_position.y,
+                    x=self.left_down.x - self.sheet_pos.x,
+                    y=self.left_down.y - self.sheet_pos.y,
                 )
 
                 self.scale_select = self.scale_rects.SelectScale(local_position)
-                self.hitbox_buffer.Set(
-                    x=self.left_down.x, 
-                    y=self.left_down.y
-                )
+                self.hitbox_buffer.Set(x=self.left_down.x, y=self.left_down.y)
 
             # Find a hitbox in the mouse position
             if self.scale_select is None:
                 local_position = Point(
-                    x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
-                    y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
+                    x=(self.left_down.x - self.sheet_pos.x) // self.magnify_factor,
+                    y=(self.left_down.y - self.sheet_pos.y) // self.magnify_factor,
                 )
 
                 for label, hitbox in self.sprites[self.select].hitboxes.items():
@@ -797,14 +752,16 @@ class Canvas(wx.Panel):
         elif self.state == State.DRAW and self.select:
             sprite = (self.select_position.x, self.select_position.y)
 
-            self.hitbox_select = self.n_hitboxes_created
-            self.sprites[sprite].hitboxes[self.hitbox_select] = Rect(
-                x=(self.left_down.x - self.bmp_position.x) // self.magnify_factor,
-                y=(self.left_down.y - self.bmp_position.y) // self.magnify_factor,
-                w=0,
-                h=0,
-                label=f"box{self.hitbox_select}",
+            self.destinations.Append(
+                Rect(
+                    x=(self.left_down.x - self.sheet_pos.x) // self.magnify_factor,
+                    y=(self.left_down.y - self.sheet_pos.y) // self.magnify_factor,
+                    w=0,
+                    h=0,
+                )
             )
+            self.hitbox_select = self.destinations.Size() - 1
+            self.sprites[sprite][self.n_hitboxes_created] = self.hitbox_select
 
             self.n_hitboxes_created += 1
 
@@ -829,11 +786,15 @@ class Canvas(wx.Panel):
             releases and mouse movements.
         """
         if self.state == State.DRAW and self.hitbox_select is not None:
-            hitboxes = self.sprites[self.select].hitboxes
-            hitbox = hitboxes[self.hitbox_select]
+            hitbox = self.destinations[self.hitbox_select]
 
             if hitbox.w <= 0 or hitbox.h <= 0:
-                del hitboxes[self.hitbox_select]
+                self.destinations.Delete(self.hitbox_select)
+
+                for sprite in self.sprites.values():
+                    for index in sprite.values():
+                        if index > self.hitbox_select:
+                            index -= 1
 
             else:
                 self.saved = False
@@ -842,7 +803,7 @@ class Canvas(wx.Panel):
 
     def onMiddleDown(self, event: wx.MouseEvent):
         """Processes mouse middle button press events.
-        
+
         The location of the mouse press is recorded for panning upon motion.
 
         Parameters
@@ -859,11 +820,11 @@ class Canvas(wx.Panel):
         If the `Select` tool is selected:
 
         - the preview of the sprite selection is set.
-        
+
         If the left button is held down and the `Move` tool is selected:
 
         - if the user is scaling a hitbox, then the hitbox is resized depending
-          which scaling pin was pressed 
+          which scaling pin was pressed
         - if the user is not scaling a hitbox, then the hitbox is moved to
           where the user dragged.
 
@@ -873,7 +834,7 @@ class Canvas(wx.Panel):
           opposite corner from where they pressed.
 
         If the middle button is held down:
-        
+
         - the image, rulers, and hitboxes are moved to where the user dragged.
 
         Parameters
@@ -891,7 +852,7 @@ class Canvas(wx.Panel):
         if event.LeftIsDown() and self.hitbox_select is not None:
             x, y = event.GetPosition()
 
-            hitbox = self.sprites[self.select].hitboxes[self.hitbox_select]
+            hitbox = self.destinations[self.hitbox_select]
 
             if self.state == State.MOVE:
                 if self.scale_select is not None:
@@ -901,7 +862,7 @@ class Canvas(wx.Panel):
 
                     if dx != 0:
                         self.hitbox_buffer.x = x
-                    
+
                     if dy != 0:
                         self.hitbox_buffer.y = y
 
@@ -936,11 +897,16 @@ class Canvas(wx.Panel):
                 dy = y - self.left_down.y
 
                 if dx != 0 or dy != 0:
-                    hitbox.Set(
-                        x=(min(x, self.left_down.x) - self.bmp_position.x) // self.magnify_factor,
-                        y=(min(y, self.left_down.y) - self.bmp_position.y) // self.magnify_factor,
-                        w=abs(dx) // self.magnify_factor,
-                        h=abs(dy) // self.magnify_factor,
+                    self.destinations.Set(
+                        index=self.hitbox_select,
+                        rect=Rect(
+                            x=(min(x, self.left_down.x) - self.sheet_pos.x)
+                                // self.magnify_factor,
+                            y=(min(y, self.left_down.y) - self.sheet_pos.y)
+                                // self.magnify_factor,
+                            w=abs(dx) // self.magnify_factor,
+                            h=abs(dy) // self.magnify_factor,
+                        )
                     )
 
                     self.Refresh()
@@ -953,8 +919,8 @@ class Canvas(wx.Panel):
             dx = x - self.middle_down.x
             dy = y - self.middle_down.y
 
-            self.bmp_position.x += dx
-            self.bmp_position.y += dy
+            self.sheet_pos.x += dx
+            self.sheet_pos.y += dy
 
             self.middle_down.Set(x, y)
 
@@ -967,17 +933,17 @@ class Canvas(wx.Panel):
         the magnification settings.
 
         The magnification has a base setting of `1`, where each pixel of the
-        image is one pixel on the canvas. 
-        
-        If the user zooms in from the base setting, the magnification is 
-        increased by an integer value. Thus, one pixel of the image is rendered 
-        as two pixels on the canvas, or one pixel of the image is rendered as 
+        image is one pixel on the canvas.
+
+        If the user zooms in from the base setting, the magnification is
+        increased by an integer value. Thus, one pixel of the image is rendered
+        as two pixels on the canvas, or one pixel of the image is rendered as
         three pixels on the canvas, and so on.
 
-        If the user zooms out from the base value, the magnification is 
+        If the user zooms out from the base value, the magnification is
         decreased by a fraction where the denominator is increased by an
-        integer value. Thus, two pixels of the image is rendered as one pixel 
-        on the canvas, or four pixels of the image is rendered as one pixel on 
+        integer value. Thus, two pixels of the image is rendered as one pixel
+        on the canvas, or four pixels of the image is rendered as one pixel on
         the canvas, and so on.
 
         Parameters
@@ -986,7 +952,7 @@ class Canvas(wx.Panel):
             The event containing information about mouse button presses and
             releases and mouse movements.
         """
-        if not self.bmp_loaded:
+        if not self.sheet_loaded:
             return
 
         x, y = event.GetPosition()
@@ -1007,11 +973,11 @@ class Canvas(wx.Panel):
         old_mag = self.magnify_factor
         self.magnify_factor = np.power(float(abs(self.magnify)), np.sign(self.magnify))
 
-        w, h = self.bmp.GetSize()
+        w, h = self.sheet.GetSize()
 
-        self.bmp_position.Set(
-            x=x - (self.magnify_factor / old_mag) * (x - self.bmp_position.x),
-            y=y - (self.magnify_factor / old_mag) * (y - self.bmp_position.y),
+        self.sheet_pos.Set(
+            x=x - (self.magnify_factor / old_mag) * (x - self.sheet_pos.x),
+            y=y - (self.magnify_factor / old_mag) * (y - self.sheet_pos.y),
             w=w * self.magnify_factor,
             h=h * self.magnify_factor,
         )
@@ -1037,14 +1003,14 @@ class Canvas(wx.Panel):
 
         # Paint background
         gc.DrawBitmap(
-            bmp=self.bg,
+            bmp=self.bg_gray,
             x=0,
             y=0,
             w=w,
             h=h,
         )
 
-        if self.bmp_loaded:
+        if self.sheet_loaded:
             self.PaintBMP(gc)
             self.PaintRulers(dc)
 
@@ -1060,20 +1026,39 @@ class Canvas(wx.Panel):
         """Processes window resizing events.
 
         When the window is resized, the background is resized.
-        
+
         Parameters
         -----------
         event: wx.SizeEvent
             The event containing information about the size change of the
             window.
         """
-        w, h = event.GetSize()
+        self.__size_bg(*event.GetSize())
 
-        self.bg = wx.Bitmap.FromRGBA(
+    def __size_bg(self, w: int, h: int):
+        """Sets the background of the canvas as a neutral gray and black."""
+
+        self.bg_red = wx.Bitmap.FromRGBA(
+            width=1000,
+            height=1000,
+            red=255,
+            green=0,
+            blue=0,
+            alpha=127,
+        )
+        self.bg_gray = wx.Bitmap.FromRGBA(
             width=w,
             height=h,
-            red=self.bg_colour.red,
-            green=self.bg_colour.green,
-            blue=self.bg_colour.blue,
-            alpha=self.bg_colour.alpha,
+            red=128,
+            green=128,
+            blue=128,
+            alpha=255,
+        )
+        self.bg_black = wx.Bitmap.FromRGBA(
+            width=w,
+            height=h,
+            red=0,
+            green=0,
+            blue=0,
+            alpha=127,
         )
