@@ -1,13 +1,13 @@
 import wx
 
-from pixie_trap.frame import Frame
+from pixie_trap.main_window import MainWindow
 
 
 def main():
     """The main loop of the application."""
     app = wx.App()
 
-    pixie_trap = Frame()
+    pixie_trap = MainWindow()
     pixie_trap.Show()
 
     app.MainLoop()

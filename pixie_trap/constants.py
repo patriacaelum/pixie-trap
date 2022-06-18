@@ -13,16 +13,16 @@ JSON_WILDCARD = "JSON files (*.json)|*.json"
 PXT_WILDCARD = "PXT files (*.pxt)|*.pxt"
 
 
-EXPAND = wx.ALL | wx.EXPAND
+ALL_EXPAND = wx.ALL | wx.EXPAND
 CENTER_RIGHT = wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL
 
 
-UpdateInspectorHitboxEvent, EVT_UPDATE_INSPECTOR_HITBOX = NewEvent()
-UpdateInspectorSpriteEvent, EVT_UPDATE_INSPECTOR_SPRITE = NewEvent()
+UpdateHitboxEvent, EVT_UPDATE_HITBOX = NewEvent()
+SpriteSelectedEvent, EVT_SPRITE_SELECTED = NewEvent()
 
 
-class State(enum.Enum):
-    """These define the state of the :class:`Canvas`."""
+class Mode(enum.Enum):
+    """These define the mode of the :class:`Canvas`."""
 
     SELECT = enum.auto()
     MOVE = enum.auto()

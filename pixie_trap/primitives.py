@@ -1,11 +1,8 @@
-import dataclasses
-
 import numpy as np
 
-from .constants import Scale
+from pixie_trap.constants import Scale
 
 
-@dataclasses.dataclass
 class Point:
     """A point in space.
 
@@ -17,10 +14,14 @@ class Point:
         The y-coordinate.
     """
 
-    x: int = 0
-    y: int = 0
+    def __init__(self, x: int = 0, y: int = 0):
+        self.set(x=x, y=y)
 
-    def Set(self, x: int, y: int):
+    def move(self, dx: int = 0, dy: int = 0):
+        self.x += int(dx)
+        self.y += int(dy)
+
+    def set(self, x: int = None, y: int = None):
         """Sets the point position.
 
         Parameters
@@ -30,14 +31,22 @@ class Point:
         y: int
             The y-coordinate.
         """
-        self.x = int(x)
-        self.y = int(y)
+        if x is not None:
+            self.x = int(x)
+
+        if y is not None:
+            self.y = int(y)
+
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+        }
 
     def __str__(self):
         return f"x={self.x}, y={self.y}"
 
 
-@dataclasses.dataclass
 class Rect:
     """A rectangle is defined by its position and size.
 
@@ -55,12 +64,10 @@ class Rect:
         The name of the rectangle.
     """
 
-    x: int = 0
-    y: int = 0
-    w: int = 0
-    h: int = 0
+    def __init__(self, x: int = 0, y: int = 0, w: int = 0, h: int = 0):
+        self.set(x=x, y=y, w=w, h=h)
 
-    def Contains(self, point: Point):
+    def contains(self, point: Point):
         """Checks if the given :class:`Point` is inside of the rectangle.
 
         Parameters
@@ -78,7 +85,11 @@ class Rect:
 
         return x_in and y_in
 
-    def Scale(self, scale: Scale, dx: int, dy: int):
+    def move(self, dx: int = 0, dy: int = 0):
+        self.x += int(dx)
+        self.y += int(dy)
+
+    def scale(self, scale: Scale, dx: int, dy: int):
         """Scales the rectangle based on the direction.
 
         Parameters
@@ -90,6 +101,9 @@ class Rect:
         dy: int
             The magnitude of the scaling operation in the y-direction.
         """
+        dx = int(dx)
+        dy = int(dy)
+
         if scale == Scale.TOP:
             self.y += dy
             self.h -= dy
@@ -124,7 +138,7 @@ class Rect:
             self.w += dx
             self.h += dy
 
-    def Set(self, x: int, y: int, w: int, h: int):
+    def set(self, x: int = None, y: int = None, w: int = None, h: int = None):
         """Sets the rectangle position and size.
 
         Parameters
@@ -138,10 +152,25 @@ class Rect:
         h: int
             The height of the rectangle, extending downwards.
         """
-        self.x = int(x)
-        self.y = int(y)
-        self.w = int(w)
-        self.h = int(h)
+        if x is not None:
+            self.x = int(x)
+
+        if y is not None:
+            self.y = int(y)
+
+        if w is not None:
+            self.w = int(w)
+
+        if h is not None:
+            self.h = int(h)
+
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y,
+            "w": self.w,
+            "h": self.h,
+        }
 
     @property
     def center(self):
@@ -194,49 +223,65 @@ class Rects:
 
         self.rects = np.array([x, y, w, h])
 
-    def Append(self, rect: Rect):
+    def append(self, rect: Rect):
         self.rects = np.append(self.rects, [[rect.x], [rect.y], [rect.w], [rect.h]], axis=1) 
 
-    def Delete(self, index: int):
+    def delete(self, index: int):
         self.rects = np.delete(self.rects, index, axis=1)
 
-    def Get(self, index: int):
+    def get(self, index: int):
         return self[index]
 
-    def Insert(self, index: int, rect: Rect):
+    def insert(self, index: int, rect: Rect):
         self.rects = np.insert(self.rects, index, [rect.x, rect.y, rect.w, rect.h], axis=1)
 
-    def Move(self, dx: int = 0, dy: int = 0):
+    def move(self, dx: int = 0, dy: int = 0):
         """Moves all rectangles."""
-        self.rects.x += np.full_like(shape=self.rects.x, fill_value=dx)
-        self.rects.y += np.full_like(shape=self.rects.y, fill_value=dy)
+        self.x += dx
+        self.y += dy
 
-    def MoveRect(self, index: int, dx: int = 0, dy: int = 0):
+    def move_rect(self, index: int, dx: int = 0, dy: int = 0):
         """Moves a single rectangle."""
-        self.rects.x[index] += dx
-        self.rects.y[index] += dy
+        self.x[index] += dx
+        self.y[index] += dy
 
-    def Set(self, index: int, rect: Rect):
+    def set(self, index: int, rect: Rect):
         self[index] = rect
 
-    def Size(self):
+    def size(self):
         return len(self)
 
     @property
     def x(self):
         return self.rects[0]
 
+    @x.setter
+    def x(self, value):
+        self.rects[0] = value
+
     @property 
     def y(self):
         return self.rects[1]
+
+    @y.setter 
+    def y(self, value):
+        self.rects[1] = value
 
     @property 
     def w(self):
         return self.rects[2]
 
+    @w.setter 
+    def w(self, value):
+        self.rects[2] = value
+
     @property 
     def h(self):
         return self.rects[3]
+
+    @h.setter 
+    def h(self, value):
+        self.rects[3] = value
 
     def __len__(self):
         return self.rects.shape[1]
@@ -282,18 +327,31 @@ class ScaleRects:
         bottom_left=Rect(),
         bottom_right=Rect(),
     ):
-        self.rects = {
-            Scale.TOP: top,
-            Scale.LEFT: left,
-            Scale.RIGHT: right,
-            Scale.BOTTOM: bottom,
-            Scale.TOP_LEFT: top_left,
-            Scale.TOP_RIGHT: top_right,
-            Scale.BOTTOM_LEFT: bottom_left,
-            Scale.BOTTOM_RIGHT: bottom_right,
+        self.rects = Rects()
+        self.rects.append(top)
+        self.rects.append(left)
+        self.rects.append(right)
+        self.rects.append(bottom)
+        self.rects.append(top_left)
+        self.rects.append(top_right)
+        self.rects.append(bottom_left)
+        self.rects.append(bottom_left)
+
+        self.keys = {
+            Scale.TOP: 0,
+            Scale.LEFT: 1,
+            Scale.RIGHT: 2,
+            Scale.BOTTOM: 3,
+            Scale.TOP_LEFT: 4,
+            Scale.TOP_RIGHT: 5,
+            Scale.BOTTOM_LEFT: 6,
+            Scale.BOTTOM_RIGHT: 7,
         }
 
-    def SelectScale(self, point: Point):
+    def move(self, dx: int = 0, dy: int = 0):
+        self.rects.move(dx=dx, dy=dy)
+
+    def select_scale(self, point: Point):
         """Selects a scale operation based on which scaling pin contains the
         given point.
 
@@ -308,13 +366,13 @@ class ScaleRects:
             A :class:`Scale` direction if the given point is inside one of the
             scaling pins, `None` otherwise.
         """
-        for scale, rect in self.rects.items():
-            if rect.Contains(point):
+        for scale, index in self.keys.items():
+            if self.rects.get(index).contains(point):
                 return scale
-        else:
-            return None
 
-    def Set(self, rect: Rect, radius: int, factor: float):
+        return None
+
+    def set(self, rect: Rect, radius: int = 10):
         """Sets the scaling pins based on the given rectangle.
 
         Parameters
@@ -324,66 +382,87 @@ class ScaleRects:
         radius: int
             Half of the width and height of the scaling pins. This affects the
             size of the scaling pins.
-        factor: float
-            The magnification factor of the rectangle. This mostly affects the
-            positions of the scaling pins.
         """
         diametre = 2 * radius
 
-        self.top.Set(
-            x=rect.centre.x * factor - radius,
-            y=rect.y * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=0,
+            rect=Rect(
+                x=rect.centre.x - radius,
+                y=rect.y - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.left.Set(
-            x=rect.x * factor - radius,
-            y=rect.centre.y * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=1,
+            rect=Rect(
+                x=rect.x - radius,
+                y=rect.centre.y - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.right.Set(
-            x=(rect.x + rect.w) * factor - radius,
-            y=rect.centre.y * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=2,
+            rect=Rect(
+                x=rect.x + rect.w - radius,
+                y=rect.centre.y - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.bottom.Set(
-            x=rect.centre.x * factor - radius,
-            y=(rect.y + rect.h) * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=3,
+            rect=Rect(
+                x=rect.centre.x - radius,
+                y=rect.y + rect.h - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.top_left.Set(
-            x=rect.x * factor - radius,
-            y=rect.y * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=4,
+            rect=Rect(
+                x=rect.x - radius,
+                y=rect.y - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.top_right.Set(
-            x=(rect.x + rect.w) * factor - radius,
-            y=rect.y * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=5,
+            rect=Rect(
+                x=rect.x + rect.w - radius,
+                y=rect.y - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.bottom_left.Set(
-            x=rect.x * factor - radius,
-            y=(rect.y + rect.h) * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=6,
+            rect=Rect(
+                x=rect.x - radius,
+                y=rect.y + rect.h - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
-        self.bottom_right.Set(
-            x=(rect.x + rect.w) * factor - radius,
-            y=(rect.y + rect.h) * factor - radius,
-            w=diametre,
-            h=diametre,
+        self.rects.set(
+            index=7,
+            rect=Rect(
+                x=rect.x + rect.w - radius,
+                y=rect.y + rect.h - radius,
+                w=diametre,
+                h=diametre,
+            ),
         )
 
     @property
