@@ -629,7 +629,21 @@ class Canvas(wx.Panel):
         for counter in self.sprites[self.sprite_select]:
             if left_down_in[self.indices[counter]]:
                 self.hitbox_select = counter
-                self.scale_rects.set(rect=self.destinations.get(self.hitbox_select))
+                hitbox = self.destinations.get(self.hitbox_select)
+                self.scale_rects.set(rect=hitbox)
+
+                wx.PostEvent(
+                    self.Parent,
+                    UpdateHitboxEvent(
+                        label=self.hitbox_labels[self.hitbox_select],
+                        global_x=int((hitbox.x - self.spritesheet_pos.x) / self.scale_factor),
+                        global_y=int((hitbox.y - self.spritesheet_pos.y) / self.scale_factor),
+                        local_x=int((hitbox.x - self.sprite_pos.x) / self.scale_factor),
+                        local_y=int((hitbox.y - self.sprite_pos.y) / self.scale_factor),
+                        width=int(hitbox.w / self.scale_factor),
+                        height=int(hitbox.h / self.scale_factor),
+                    )
+                )
 
                 self.Refresh()
 
