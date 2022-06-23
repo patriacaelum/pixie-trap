@@ -92,34 +92,6 @@ class Canvas(wx.Panel):
 
         self.spritesheet_loaded = True
 
-    def set_rulers(self, rows: int = None, cols: int = None):
-        """Sets the number of rulers and the size of the preview.
-
-        Parameters
-        ------------
-        rows: int
-            the number of rows in the spritesheet.
-        cols: int
-            the number of columns in the spritesheet.
-        """
-        if rows is not None:
-            self.ruler_nrows = rows
-
-        if cols is not None:
-            self.ruler_ncols = cols
-
-        self.hrulers = np.linspace(
-            start=0, 
-            stop=self.spritesheet_pos.h + 1, 
-            num=self.ruler_nrows + 1
-        )
-        self.vrulers = np.linspace(
-            start=0, 
-            stop=self.spritesheet_pos.w + 1, 
-            num=self.ruler_ncols + 1
-        )
-        self.__size_bitmaps()
-
     def reset(self):
         """Resets the canvas to default parameters."""
         self.left_down = Point()
@@ -150,6 +122,106 @@ class Canvas(wx.Panel):
         self.ruler_ncols = 1
         self.hrulers = np.array([])
         self.vrulers = np.array([])
+
+    def set_rulers(self, rows: int = None, cols: int = None):
+        """Sets the number of rulers and the size of the preview.
+
+        Parameters
+        ------------
+        rows: int
+            the number of rows in the spritesheet.
+        cols: int
+            the number of columns in the spritesheet.
+        """
+        if rows is not None:
+            self.ruler_nrows = rows
+
+        if cols is not None:
+            self.ruler_ncols = cols
+
+        self.hrulers = np.linspace(
+            start=0, 
+            stop=self.spritesheet_pos.h + 1, 
+            num=self.ruler_nrows + 1
+        )
+        self.vrulers = np.linspace(
+            start=0, 
+            stop=self.spritesheet_pos.w + 1, 
+            num=self.ruler_ncols + 1
+        )
+        self.__size_bitmaps()
+
+    def to_dict(self):
+        """Returns information about the canvas in a JSON compatible format.
+
+        The JSON data is written in the format::
+
+            {
+                "spritesheet_properties": {
+                    "rows": int,
+                    "cols": int,
+                },
+                "sprite_properties": {
+                    "sprite_label_0": {
+                        "location": {
+                            "x": int,
+                            "y": int,
+                        },
+                        "hitboxes": {
+                            "hitbox_label_0": {
+                                "x": int,
+                                "y": int,
+                                "w": int,
+                                "h": int,
+                            },
+                            "hitbox_label_1": {
+                                ...
+                            },
+                        },
+                    },
+                    "sprite_label_1": {
+                        ...
+                    },
+                    ...
+                },
+            }
+
+        Returns
+        ---------
+        data: dict
+            information about the canvas in a JSON compatible format.
+        """
+        data = {
+            "spritesheet_properties": {
+                "rows": self.ruler_nrows,
+                "columns": self.ruler_ncols,
+            },
+        }
+
+        sprite_properties = {}
+
+        for sprite_location, counters in self.sprites.items():
+            sprite_label = self.sprite_labels[sprite_location]
+
+            hitboxes = {}
+
+            for counter in counters:
+                hitbox_label = self.hitbox_labels[counter]
+                hitbox = self.destinations.get(counter)
+
+                hitboxes[hitbox_label] = hitbox.to_dict()
+
+            sprite_properties[sprite_label] = {
+                "location": {
+                    "x": sprite_location[0],
+                    "y": sprite_location[1],
+                },
+                "hitboxes": hitboxes,
+            }
+
+        data["sprite_properties"] = sprite_properties
+
+        return data
 
     def __create_hitbox(self):
         """Initializes drawing a hitbox."""

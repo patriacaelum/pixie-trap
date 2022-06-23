@@ -1,4 +1,7 @@
+import json
 import os
+import shutil
+
 import wx
 
 from pixie_trap.canvas import Canvas
@@ -55,6 +58,8 @@ class MainWindow(wx.Frame):
         self.__init_toolbar()
 
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_new, id=self.menubar_file_new.GetId())
+        self.Bind(wx.EVT_MENU, self.__on_menubar_file_save, id=self.menubar_file_save.GetId())
+        self.Bind(wx.EVT_MENU, self.__on_menubar_file_save_as, id=self.menubar_file_save_as.GetId())
 
         self.Bind(wx.EVT_TOOL, self.__on_tool_draw, id=self.tool_draw.GetId())
         self.Bind(wx.EVT_TOOL, self.__on_tool_move, id=self.tool_move.GetId())
@@ -275,6 +280,32 @@ class MainWindow(wx.Frame):
 
         self.Refresh()
 
+    def __on_menubar_file_save(self, event: wx.MenuEvent):
+        """Saves the current canvas to the current savefile. Only asks to write
+        to a new save file if one has not been specified.
+
+        Parameters
+        ------------
+        event: wx.MenuEvent
+            contains information about the menu event.
+        """
+        if self.savefile is None:
+            self.__set_savefile()
+
+        self.__save()
+
+    def __on_menubar_file_save_as(self, event: wx.MenuEvent):
+        """Saves the current canvas to the current savefile. Always asks to
+        write to a new save file.
+
+        Parameters
+        ------------
+        event: wx.MenuEvent
+            contains information about the menu event.
+        """
+        self.__set_savefile()
+        self.__save()
+
     def __on_sprite_selected(self, event: SpriteSelectedEvent):
         """Updates the sprite properties in the inspector.
 
@@ -384,6 +415,71 @@ class MainWindow(wx.Frame):
         self.inspector.hitbox_local_y.SetValue(str(event.local_y))
         self.inspector.hitbox_width.SetValue(str(event.width))
         self.inspector.hitbox_height.SetValue(str(event.height))
+
+    def __save(self):
+        """Saves the current canvas to disk.
+
+        The PXT file format is really just a `.tar.gz` compressed directory
+        that includes the canvas image and the JSON data of the hitboxes.
+
+        The steps for saving a PXT file are:
+
+        - Create temporary directory
+        - Save the image file
+        - Save the JSON data
+        - Compress the temporary directory into a PXT file
+        - Remove the temporary directory
+
+        """
+
+        temp_dir = "temp_" + self.savefile
+        spritesheet_file = os.path.join(temp_dir, "canvas.bmp")
+        data_file = os.path.join(temp_dir, "data.json")
+
+        # Create a temporary directory
+        os.mkdir(temp_dir)
+
+        # Save the spritesheet as an image file
+        self.canvas.spritesheet.SaveFile(name=spritesheet_file, type=wx.BITMAP_TYPE_BMP)
+
+        # Save the JSON data
+        try:
+            with open(data_file, "w") as file:
+                json.dump(self.canvas.to_dict(), file)
+        except IOError as error:
+            wx.LogError(f"Failed to save data file in {data_file}")
+
+        # Compress the temporary directory
+        archive_file = shutil.make_archive(
+            base_name=self.savefile,
+            format="gztar",
+            root_dir=temp_dir,
+        )
+
+        # Rename the compressed file to PXT
+        shutil.move(src=archive_file, dst=self.savefile)
+
+        # Remove the temporary directory
+        shutil.rmtree(temp_dir)
+
+        self.saved = True
+
+    def __set_savefile(self):
+        """Prompts the user to specify a save file."""
+
+        with wx.FileDialog(
+            parent=self,
+            message="Save current canvas",
+            wildcard=PXT_WILDCARD,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            self.savefile = dialog.GetPath()
+
+        if os.path.splitext(self.savefile)[0] == self.savefile:
+            self.savefile += ".pxt"
 
     def __size_components(self):
         """Initializes the components and sizes them in the window."""
