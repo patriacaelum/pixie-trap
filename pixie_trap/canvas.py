@@ -198,7 +198,36 @@ class Canvas(wx.Panel):
             },
         }
 
-        sprite_properties = {}
+        data["sprite_properties"] = self.to_json()
+
+        return data
+
+    def to_json(self):
+        """Returns the hitboxes as JSON.
+
+        The JSON data has the structure::
+
+            {
+                "sprite_label_0": {
+                    "hitbox_label_0": {
+                        "x": int,
+                        "y": int,
+                        "w": int,
+                        "h": int,
+                    }
+                },
+                "sprite_label_1": {
+                    ...
+                },
+                ...
+            }
+
+        Returns
+        ---------
+        data: dict
+            information about the hitboxes as JSON.
+        """
+        data = {}
 
         for sprite_location, counters in self.sprites.items():
             sprite_label = self.sprite_labels[sprite_location]
@@ -211,15 +240,13 @@ class Canvas(wx.Panel):
 
                 hitboxes[hitbox_label] = hitbox.to_dict()
 
-            sprite_properties[sprite_label] = {
+            data[sprite_label] = {
                 "location": {
                     "x": sprite_location[0],
                     "y": sprite_location[1],
                 },
                 "hitboxes": hitboxes,
             }
-
-        data["sprite_properties"] = sprite_properties
 
         return data
 

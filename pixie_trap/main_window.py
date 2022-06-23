@@ -57,6 +57,7 @@ class MainWindow(wx.Frame):
         self.__init_menubar()
         self.__init_toolbar()
 
+        self.Bind(wx.EVT_MENU, self.__on_menubar_file_export_as, id=self.menubar_file_export_as.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_new, id=self.menubar_file_new.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_save, id=self.menubar_file_save.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_save_as, id=self.menubar_file_save_as.GetId())
@@ -246,6 +247,28 @@ class MainWindow(wx.Frame):
         )
 
         self.tool_bar.Realize()
+
+    def __on_menubar_file_export_as(self, event: wx.MenuEvent):
+        """Exports the canvas in to a JSON file.
+
+        Parameters
+        ------------
+        event: wx.MenuEvent
+            contains information about the menu event.
+        """
+        with wx.FileDialog(
+            parent=self,
+            message="Export current canvas to JSON",
+            wildcard=JSON_WILDCARD,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as dialog:
+            if dialog.ShowModal() == wx.ID_CANCEL:
+                return
+
+            exportfile = dialog.GetPath()
+
+        with open(exportfile, "w") as file:
+            json.dump(self.canvas.to_json(), file, indent=4, sort_keys=True)
 
     def __on_menubar_file_new(self, event: wx.MenuEvent):
         """Resets the canvas and loads a new spritesheet.
@@ -443,11 +466,8 @@ class MainWindow(wx.Frame):
         self.canvas.spritesheet.SaveFile(name=spritesheet_file, type=wx.BITMAP_TYPE_BMP)
 
         # Save the JSON data
-        try:
-            with open(data_file, "w") as file:
-                json.dump(self.canvas.to_dict(), file)
-        except IOError as error:
-            wx.LogError(f"Failed to save data file in {data_file}")
+        with open(data_file, "w") as file:
+            json.dump(self.canvas.to_dict(), file, index=4, sort_keys=True)
 
         # Compress the temporary directory
         archive_file = shutil.make_archive(
