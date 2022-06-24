@@ -17,8 +17,10 @@ ALL_EXPAND = wx.ALL | wx.EXPAND
 CENTER_RIGHT = wx.ALL | wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL
 
 
-UpdateHitboxEvent, EVT_UPDATE_HITBOX = NewEvent()
 SpriteSelectedEvent, EVT_SPRITE_SELECTED = NewEvent()
+ToggleIsolateEvent, EVT_TOGGLE_ISOLATE = NewEvent()
+UpdateHitboxEvent, EVT_UPDATE_HITBOX = NewEvent()
+UpdateTransparencyEvent, EVT_UPDATE_TRANSPARENCY = NewEvent()
 
 
 class Mode(enum.Enum):

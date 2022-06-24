@@ -1,6 +1,11 @@
 import wx
 
-from pixie_trap.constants import ALL_EXPAND, CENTER_RIGHT
+from pixie_trap.constants import (
+    ALL_EXPAND, 
+    CENTER_RIGHT, 
+    ToggleIsolateEvent,
+    UpdateTransparencyEvent,
+)
 
 
 class Inspector(wx.Panel):
@@ -23,6 +28,9 @@ class Inspector(wx.Panel):
         self.__init_hitbox_properties()
 
         self.__size_components()
+
+        self.Bind(EVT_CHECKBOX, self.__on_checkbox, self.isolate_hitboxes.GetId())
+        self.Bind(EVT_SLIDER, self.__on_slider, self.transparency.GetId())
 
     def disable_hitbox_properties(self):
         """Disables the ability to edit the hitbox properties.
@@ -209,6 +217,9 @@ class Inspector(wx.Panel):
         self.spritesheet_rows.SetValue("1")
         self.spritesheet_cols.SetValue("1")
 
+        self.isolate_hitboxes.Enable()
+        self.transparency.SetValue(127)
+
     def __init_hitbox_properties(self):
         """Initializes the hitbox properties.
 
@@ -256,7 +267,7 @@ class Inspector(wx.Panel):
         self.transparency_label = wx.StaticText(parent=self, label="Transparency")
         self.transparency = wx.Slider(
             parent=self,
-            value=50,
+            value=127,
             minValue=0,
             maxValue=255,
             size=(180, -1),
@@ -318,6 +329,26 @@ class Inspector(wx.Panel):
             value="1",
             style=wx.TE_PROCESS_ENTER,
         )
+
+    def __on_checkbox(self, event: wx.CommandEvent):
+        """Toggles isolating hitboxes for the selected sprite.
+
+        Parameters
+        ------------
+        event: wx.CommandEvent
+            processes when a checkbox is clicked.
+        """ 
+        wx.PostEvent(self.Parent, ToggleIsolateEvent(isolate=self.isolate_hitboxes.IsChecked()))
+
+    def __on_slider(self, event: wx.CommandEvent):
+        """Changes the transparency of the hitboxes.
+
+        Parameters
+        ------------
+        event: wx.CommandEvent
+            generated after any change of the lider position.
+        """
+        wx.PostEvent(self.Parent, UpdateTransparencyEvent(alpha=self.transparency.GetValue()))
 
     def __size_components(self):
         """Places all the initialized items in the inspector panel."""

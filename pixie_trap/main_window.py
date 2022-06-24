@@ -11,10 +11,14 @@ from pixie_trap.constants import (
     JSON_WILDCARD,
     PXT_WILDCARD,
     ALL_EXPAND,
-    UpdateHitboxEvent,
     SpriteSelectedEvent,
-    EVT_UPDATE_HITBOX,
+    ToggleIsolateEvent,
+    UpdateHitboxEvent,
+    UpdateTransparencyEvent,
     EVT_SPRITE_SELECTED,
+    EVT_TOGGLE_ISOLATE,
+    EVT_UPDATE_HITBOX,
+    EVT_UPDATE_TRANSPARENCY,
     Mode,
 )
 from pixie_trap.inspector import Inspector
@@ -81,7 +85,9 @@ class MainWindow(wx.Frame):
         )
 
         self.Bind(EVT_SPRITE_SELECTED, self.__on_sprite_selected)
+        self.Bind(EVT_TOGGLE_ISOLATE, self.__on_toggle_isolate)
         self.Bind(EVT_UPDATE_HITBOX, self.__on_update_hitbox)
+        self.Bind(EVT_UPDATE_TRANSPARENCY, self.__on_update_transparency)
 
     def reset(self):
         """Resets the state of the entire program."""
@@ -183,7 +189,7 @@ class MainWindow(wx.Frame):
             text="Export As...\tCTRL+SHIFT+E",
             kind=wx.ITEM_NORMAL,
         )
-        self.menubar_file_exit = wx.MenuItem(
+        self.menubar_file_quit = wx.MenuItem(
             parentMenu=self.menubar_file,
             id=wx.ID_ANY,
             text="Quit\tCTRL+Q",
@@ -200,7 +206,7 @@ class MainWindow(wx.Frame):
         self.menubar_file.Append(self.menubar_file_save_as)
         self.menubar_file.Append(self.menubar_file_export_as)
         self.menubar_file.AppendSeparator()
-        self.menubar_file.Append(self.menubar_file_exit)
+        self.menubar_file.Append(self.menubar_file_quit)
 
     def __init_toolbar(self):
         """Initializes the toolbar.
@@ -396,7 +402,8 @@ class MainWindow(wx.Frame):
         if self.savefile is None:
             self.__set_savefile()
 
-        self.__save()
+        if self.savefile is not None:
+            self.__save()
 
     def __on_menubar_file_save_as(self, event: wx.MenuEvent):
         """Saves the current canvas to the current savefile. Always asks to
@@ -437,6 +444,18 @@ class MainWindow(wx.Frame):
         )
 
         self.saved = False
+
+        self.Refresh()
+
+    def __on_toggle_isolate(self, event: ToggleIsolateEvent):
+        """Toggles isolating hitboxes for the selected sprite.
+
+        Parameters
+        ------------
+        event: ToggleIsolateEvent
+            custom event with properties `isolate`.
+        """
+        self.canvas.isolate = event.isolate
 
         self.Refresh()
 
@@ -519,6 +538,16 @@ class MainWindow(wx.Frame):
         self.inspector.hitbox_local_y.SetValue(str(event.local_y))
         self.inspector.hitbox_width.SetValue(str(event.width))
         self.inspector.hitbox_height.SetValue(str(event.height))
+
+    def __on_update_transparency(self, event: UpdateTransparencyEvent):
+        """Updates the transparency of the hitboxes.
+
+        Parameters
+        ------------
+        event: UpdateTransparencyEvent
+            custom event with properties `alpha`.
+        """
+        self.canvas.set_alpha(event.alpha)
 
     def __save(self):
         """Saves the current canvas to disk.

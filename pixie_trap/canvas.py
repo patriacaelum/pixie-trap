@@ -47,23 +47,23 @@ class Canvas(wx.Panel):
 
         self.spritesheet = wx.Bitmap()
         self.spritesheet_bmp = wx.Bitmap()
-        self.spritesheet_pos = Rect()
         self.spritesheet_loaded = False
+        self.spritesheet_pos = Rect()
 
-        self.hitbox_select = None
         self.counter = 0
-        self.sprites = {} # Maps tuples (x, y) to a set of counters
-        self.hitbox_labels = {} # Maps a counter to a label
-        self.indices = {} # Maps a counter to an index
         self.destinations = Rects()
+        self.hitbox_labels = {} # Maps a counter to a label
+        self.hitbox_select = None
         self.hitboxes = {} # Maps a counter to bitmap
+        self.indices = {} # Maps a counter to an index
+        self.sprites = {} # Maps tuples (x, y) to a set of counters
 
-        self.sprite_select = None # A tuple (x, y)
-        self.sprite_labels = {} # Maps a tuple (x, y) to an label
-        self.sprite_pos = Rect()
-        self.sprite_bg = wx.Bitmap() # A black bitmap covering the entire canvas
         self.preview_bmp = wx.Bitmap() # A red bitmap covering the selection preview
         self.preview_pos = Rect()
+        self.sprite_bg = wx.Bitmap() # A black bitmap covering the entire canvas
+        self.sprite_labels = {} # Maps a tuple (x, y) to an label
+        self.sprite_pos = Rect()
+        self.sprite_select = None # A tuple (x, y)
 
         self.ruler_nrows = 1
         self.ruler_ncols = 1
@@ -168,6 +168,22 @@ class Canvas(wx.Panel):
         self.ruler_ncols = 1
         self.hrulers = np.array([])
         self.vrulers = np.array([])
+
+    def set_alpha(self, alpha: int):
+        """Sets the alpha value for each hitbox.
+
+        Parameters
+        ------------
+        alpha: int
+            the alpha value is between 0 and 255, where 0 is fully transparent
+            and 255 is fully opaque.
+        """
+        for bitmap in self.hitboxes.values():
+            image = bitmap.ConvertToImage()
+            image.SetAlpha(alpha)
+            bitmap = image.ConvertToBitmap()
+
+        self.Refresh()
 
     def set_rulers(self, rows: int = None, cols: int = None):
         """Sets the number of rulers and the size of the preview.
