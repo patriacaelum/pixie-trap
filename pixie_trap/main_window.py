@@ -57,9 +57,11 @@ class MainWindow(wx.Frame):
         self.__init_menubar()
         self.__init_toolbar()
 
+        self.Bind(wx.EVT_MENU, self.__on_menubar_file_close, id=self.menubar_file_close.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_export_as, id=self.menubar_file_export_as.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_new, id=self.menubar_file_new.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_open, id=self.menubar_file_open.GetId())
+        self.Bind(wx.EVT_MENU, self.__on_menubar_file_quit, id=self.menubar_file_quit.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_save, id=self.menubar_file_save.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_save_as, id=self.menubar_file_save_as.GetId())
 
@@ -80,6 +82,14 @@ class MainWindow(wx.Frame):
 
         self.Bind(EVT_SPRITE_SELECTED, self.__on_sprite_selected)
         self.Bind(EVT_UPDATE_HITBOX, self.__on_update_hitbox)
+
+    def reset(self):
+        """Resets the state of the entire program."""
+        self.saved = True
+        self.savefile = None
+
+        self.canvas.reset()
+        self.inspector.reset()
 
     def __continue(self):
         """Checks if the current state is saved and, if not, asks the user if
@@ -131,7 +141,7 @@ class MainWindow(wx.Frame):
         - Save
         - Save As...
         - Export As...
-        - Exit
+        - Quit
 
         """
 
@@ -176,7 +186,7 @@ class MainWindow(wx.Frame):
         self.menubar_file_exit = wx.MenuItem(
             parentMenu=self.menubar_file,
             id=wx.ID_ANY,
-            text="Exit\tCTRL+Q",
+            text="Quit\tCTRL+Q",
             kind=wx.ITEM_NORMAL,
         )
 
@@ -248,6 +258,21 @@ class MainWindow(wx.Frame):
         )
 
         self.tool_bar.Realize()
+
+    def __on_menubar_file_close(self, event: wx.MenuEvent):
+        """Resets the current canvas.
+
+        Parameters
+        ------------
+        event: wx.MenuEvent
+            contains information about the menu event.
+        """ 
+        if not self.saved:
+            self.__on_menubar_file_save(event)
+
+        self.reset()
+
+        self.Refresh()
 
     def __on_menubar_file_export_as(self, event: wx.MenuEvent):
         """Exports the canvas in to a JSON file.
@@ -343,6 +368,21 @@ class MainWindow(wx.Frame):
 
         # Remove the temporary directory
         shutil.rmtree(temp_dir)
+
+        self.Refresh()
+
+    def __on_menubar_file_quit(self, event: wx.MenuEvent):
+        """Quits the program. Asks the user to save if the canvas is not saved.
+
+        Parameters
+        ------------
+        event: wx.MenuEvent
+            contains information about the menu event.
+        """
+        if not self.saved:
+            self.__on_menubar_file_save(event)
+
+        self.Close()
 
     def __on_menubar_file_save(self, event: wx.MenuEvent):
         """Saves the current canvas to the current savefile. Only asks to write
