@@ -59,6 +59,7 @@ class MainWindow(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_export_as, id=self.menubar_file_export_as.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_new, id=self.menubar_file_new.GetId())
+        self.Bind(wx.EVT_MENU, self.__on_menubar_file_open, id=self.menubar_file_open.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_save, id=self.menubar_file_save.GetId())
         self.Bind(wx.EVT_MENU, self.__on_menubar_file_save_as, id=self.menubar_file_save_as.GetId())
 
@@ -303,6 +304,46 @@ class MainWindow(wx.Frame):
 
         self.Refresh()
 
+    def __on_menubar_file_open(self, event: wx.MenuEvent):
+        """Loads the current canvas from a PXT file.
+
+        The steps for loading a PXT file are:
+
+        - Decompress the PXT file into a temporary directory
+        - Load the image file as the spritesheet
+        - Load the JSON data
+        - Remove the temporary directory
+
+        Parameters
+        ------------
+        event: wx.MenuEvent
+            contains information about the menu event.
+        """
+        self.canvas.reset()
+
+        temp_dir = "temp_" + self.savefile
+        spritesheet_file = os.path.join(temp_dir, "spritesheet.bmp")
+        data_file = os.path.join(temp_dir, "data.json")
+
+        # Decompress PXT file into a temporary directory
+        shutil.unpack_archive(
+            filename=self.savefile,
+            extract_dir=temp_dir,
+            format="gztar",
+        )
+
+        # Load the image gile as the spritesheet
+        self.canvas.load_spritesheet(filepath=spritesheet_file)
+
+        # Load the JSON data
+        with open(data_file, "r") as file:
+            data = json.load(file)
+
+        self.canvas.load_json(data)
+
+        # Remove the temporary directory
+        shutil.rmtree(temp_dir)
+
     def __on_menubar_file_save(self, event: wx.MenuEvent):
         """Saves the current canvas to the current savefile. Only asks to write
         to a new save file if one has not been specified.
@@ -456,7 +497,7 @@ class MainWindow(wx.Frame):
         """
 
         temp_dir = "temp_" + self.savefile
-        spritesheet_file = os.path.join(temp_dir, "canvas.bmp")
+        spritesheet_file = os.path.join(temp_dir, "spritesheet.bmp")
         data_file = os.path.join(temp_dir, "data.json")
 
         # Create a temporary directory

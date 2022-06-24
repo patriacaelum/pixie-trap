@@ -37,7 +37,7 @@ class Canvas(wx.Panel):
         self.left_down = Point()
         self.middle_down = Point()
 
-        self.scale_select = None # A Scale value
+        self.scale_select = None # A `Scale` value
         self.zoom_level = 0
         self.scale_factor = 1
         self.scale_rects = ScaleRects()
@@ -77,6 +77,52 @@ class Canvas(wx.Panel):
         self.Bind(wx.EVT_MOTION, self.__on_motion)
 
         self.Bind(wx.EVT_PAINT, self.__on_paint)
+
+    def load_json(self, data: dict):
+        """Loads hitboxes from JSON.
+
+        Parameters
+        ------------
+        data: dict
+            the JSON data.
+        """
+        spritesheet = data["spritesheet"]
+        self.set_rulers(rows=spritesheet["rows"], cols=spritesheet["cols"])
+
+        sprites = data["sprites"]
+
+        for sprite_label, sprite in sprites.items():
+            location = sprite["location"]
+            hitboxes = sprite["hitboxes"]
+
+            key = (location["x"], location["y"])
+
+            self.sprite_labels[key] = sprite_label
+            counters = set()
+
+            for hitbox_label, hitbox in hitboxes.items():
+                counters.add(self.counter)
+                self.hitbox_labels[self.counter] = hitbox_label
+                self.indices[self.counter] = self.counter
+                rect = Rect(
+                    x=hitbox.get("x", 0),
+                    y=hitbox.get("y", 0),
+                    w=hitbox.get("w", 0),
+                    h=hitbox.get("h", 0),
+                )
+                self.destinations.append(rect)
+                self.hitboxes[self.counter] = wx.Bitmap.FromRGBA(
+                    width=rect.w,
+                    height=rect.h,
+                    red=255,
+                    green=0,
+                    blue=0,
+                    alpha=127,
+                )
+
+                self.counter += 1
+
+            self.sprites[key] = counters
 
     def load_spritesheet(self, filepath: str):
         """Loads an image as a spritesheet.
@@ -157,11 +203,11 @@ class Canvas(wx.Panel):
         The JSON data is written in the format::
 
             {
-                "spritesheet_properties": {
+                "spritesheet": {
                     "rows": int,
                     "cols": int,
                 },
-                "sprite_properties": {
+                "sprites": {
                     "sprite_label_0": {
                         "location": {
                             "x": int,
@@ -192,13 +238,13 @@ class Canvas(wx.Panel):
             information about the canvas in a JSON compatible format.
         """
         data = {
-            "spritesheet_properties": {
+            "spritesheet": {
                 "rows": self.ruler_nrows,
                 "columns": self.ruler_ncols,
             },
         }
 
-        data["sprite_properties"] = self.to_json()
+        data["sprites"] = self.to_json()
 
         return data
 
