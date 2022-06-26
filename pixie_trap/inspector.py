@@ -29,8 +29,8 @@ class Inspector(wx.Panel):
 
         self.__size_components()
 
-        self.Bind(EVT_CHECKBOX, self.__on_checkbox, self.isolate_hitboxes.GetId())
-        self.Bind(EVT_SLIDER, self.__on_slider, self.transparency.GetId())
+        self.Bind(wx.EVT_CHECKBOX, self.__on_checkbox, id=self.isolate_hitboxes.GetId())
+        self.Bind(wx.EVT_SLIDER, self.__on_slider, id=self.transparency.GetId())
 
     def disable_hitbox_properties(self):
         """Disables the ability to edit the hitbox properties.

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from math import floor
 
 import numpy as np
@@ -253,6 +254,7 @@ class Canvas(wx.Panel):
         data: dict
             information about the canvas in a JSON compatible format.
         """
+
         data = {
             "spritesheet": {
                 "rows": self.ruler_nrows,
@@ -260,7 +262,29 @@ class Canvas(wx.Panel):
             },
         }
 
-        data["sprites"] = self.to_json()
+        sprite_data = {}
+
+        for sprite_location, counters in self.sprites.items():
+            sprite_label = self.sprite_labels[sprite_location]
+
+            hitboxes = {}
+
+            for counter in counters:
+                hitbox_label = self.hitbox_labels[counter]
+                hitbox = self.destinations.get(counter)
+
+                hitboxes[hitbox_label] = hitbox.to_dict()
+
+            sprite_data[sprite_label] = {
+                "location": {
+                    "x": sprite_location[0],
+                    "y": sprite_location[1],
+                },
+                "hitboxes": hitboxes,
+            }
+
+
+        data["sprites"] = sprite_data
 
         return data
 
@@ -271,11 +295,23 @@ class Canvas(wx.Panel):
 
             {
                 "sprite_label_0": {
-                    "hitbox_label_0": {
+                    "sprite": {
                         "x": int,
                         "y": int,
                         "w": int,
-                        "h": int,
+                        "h": int
+                    },
+                    "hitboxes": {
+                        "hitbox_label_0": {
+                            "x": int,
+                            "y": int,
+                            "w": int,
+                            "h": int,
+                        }
+                        "hitbox_label_1": {
+                            ...
+                        },
+                        ...
                     }
                 },
                 "sprite_label_1": {
@@ -290,6 +326,11 @@ class Canvas(wx.Panel):
             information about the hitboxes as JSON.
         """
         data = {}
+        destinations = deepcopy(self.destinations)
+        destinations.x = destinations.x * self.scale_factor - self.spritesheet_pos.x
+        destinations.y = destinations.y * self.scale_factor - self.spritesheet_pos.y
+        destinations.w /= self.scale_factor
+        destinations.h /= self.scale_factor
 
         for sprite_location, counters in self.sprites.items():
             sprite_label = self.sprite_labels[sprite_location]
@@ -298,14 +339,16 @@ class Canvas(wx.Panel):
 
             for counter in counters:
                 hitbox_label = self.hitbox_labels[counter]
-                hitbox = self.destinations.get(counter)
+                hitbox = destinations.get(counter)
 
                 hitboxes[hitbox_label] = hitbox.to_dict()
 
             data[sprite_label] = {
-                "location": {
-                    "x": sprite_location[0],
-                    "y": sprite_location[1],
+                "sprite": {
+                    "x": int(self.vrulers[sprite_location[0]]),
+                    "y": int(self.hrulers[sprite_location[1]]),
+                    "w": int(self.spritesheet.GetWidth() // self.ruler_ncols),
+                    "h": int(self.spritesheet.GetHeight() // self.ruler_nrows),
                 },
                 "hitboxes": hitboxes,
             }
@@ -431,7 +474,7 @@ class Canvas(wx.Panel):
             if w == 0 or h == 0:
                 self.destinations.delete(index=self.hitbox_select)
                 del self.indices[self.hitbox_select]
-                del self.sprite_labels[self.hitbox_select]
+                del self.hitbox_labels[self.hitbox_select]
                 self.sprites[self.sprite_select].remove(self.hitbox_select)
 
             self.hitbox_select = None
