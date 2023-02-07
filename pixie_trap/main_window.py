@@ -300,7 +300,7 @@ class MainWindow(wx.Frame):
             exportfile = dialog.GetPath()
 
         with open(exportfile, "w") as file:
-            json.dump(self.canvas.to_json(), file, indent=4, sort_keys=True)
+            json.dump(self.canvas.to_json(), file, indent=4)
 
     def __on_menubar_file_new(self, event: wx.MenuEvent):
         """Resets the canvas and loads a new spritesheet.

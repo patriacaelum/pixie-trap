@@ -33,6 +33,7 @@ class Canvas(wx.Panel):
 
         # wxpython settings
         self.SetBackgroundStyle(wx.BG_STYLE_PAINT)
+        self.background = wx.Bitmap.FromRGBA(1000, 1000, 128, 128, 128)
 
         # Internal parameters
         self.left_down = Point()
@@ -280,7 +281,7 @@ class Canvas(wx.Panel):
                     "x": sprite_location[0],
                     "y": sprite_location[1],
                 },
-                "hitboxes": hitboxes,
+                "hitbox": hitboxes,
             }
 
 
@@ -301,7 +302,7 @@ class Canvas(wx.Panel):
                         "w": int,
                         "h": int
                     },
-                    "hitboxes": {
+                    "boxes": {
                         "hitbox_label_0": {
                             "x": int,
                             "y": int,
@@ -350,7 +351,7 @@ class Canvas(wx.Panel):
                     "w": int(self.spritesheet.GetWidth() // self.ruler_ncols),
                     "h": int(self.spritesheet.GetHeight() // self.ruler_nrows),
                 },
-                "hitboxes": hitboxes,
+                "boxes": {key: hitboxes[key] for key in sorted(hitboxes.keys())},
             }
 
         return data
@@ -575,7 +576,8 @@ class Canvas(wx.Panel):
         self.destinations.w *= factor
         self.destinations.h *= factor
 
-        self.scale_rects.set(rect=self.destinations.get(self.indices[self.hitbox_select]))
+        if self.hitbox_select is not None:
+            self.scale_rects.set(rect=self.destinations.get(self.indices[self.hitbox_select]))
 
         self.__size_bitmaps()
         self.set_rulers()
@@ -593,6 +595,10 @@ class Canvas(wx.Panel):
         """
         dc = wx.AutoBufferedPaintDC(self)
         gc = wx.GraphicsContext.Create(dc)
+
+        # Paint background
+        w, h = self.GetSize()
+        gc.DrawBitmap(bmp=self.background, x=0, y=0, w=w, h=h)
 
         # Paint spritesheet
         if self.spritesheet_loaded:
